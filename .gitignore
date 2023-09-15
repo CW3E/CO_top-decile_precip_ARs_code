@@ -6,3 +6,6 @@
 # ignore all figure files
 
 *.png
+
+# ignore juypter checkpoint files
+*.ipynb_checkpoints
