@@ -9,3 +9,6 @@
 
 # ignore juypter checkpoint files
 *.ipynb_checkpoints
+
+# ignore pycache files
+*.pyc
