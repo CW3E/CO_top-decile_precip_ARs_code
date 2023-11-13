@@ -17,7 +17,7 @@ config_name = sys.argv[2]
 config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
 ddict = config[config_name]
 
-outpath = "/expanse/lustre/scratch/dnash/temp_project/downloaded/ERA5/"
+outpath = "/expanse/lustre/scratch/dnash/temp_project/downloaded/ERA5/{0}/".format(ddict['year'])
 # Download hourly data files for each day
 outfile = outpath + "era5_nhemi_025dg_1hr_uvwq_{0}{1}{2}.nc".format(ddict['year'], ddict['month'], ddict['day'])
 c = cdsapi.Client()

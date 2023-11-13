@@ -1,4 +1,4 @@
-name: SEAK-clim
+name: eaton-scripps
 channels:
   - conda-forge
   - defaults  
@@ -17,16 +17,8 @@ dependencies:
   - ipykernel
   - geopandas
   - pyyaml
-  - dask
   - metpy
-  - xoak
-  - odc-geo
-  - cfgrib
-  - pynio
-  
-  - pip:
-    - rasterio
-    - rioxarray==0.3.1
-    - earthpy
+  - ulmo
+
 
 
