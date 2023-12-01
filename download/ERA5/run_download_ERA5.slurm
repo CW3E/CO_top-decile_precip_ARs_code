@@ -17,5 +17,5 @@
 source /home/${USER}/.bashrc
 source activate cds 
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_2.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_3.txt`
 eval $linevar
