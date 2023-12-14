@@ -1,4 +1,4 @@
-name: eaton-scripps
+name: eaton-scripps-CO
 channels:
   - conda-forge
   - defaults  
@@ -9,16 +9,16 @@ dependencies:
   - matplotlib
   - pandas
   - netcdf4
-  - xarray
   - cartopy
   - cmocean
   - seaborn
   - cmocean
   - ipykernel
-  - geopandas
   - pyyaml
-  - metpy
-  - ulmo
+
+  - pip:
+      - dask
+      - xarray==2022.11.0
 
 
 

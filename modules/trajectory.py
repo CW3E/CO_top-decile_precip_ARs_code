@@ -30,24 +30,41 @@ class calculate_backward_trajectory:
     
     def __init__(self, ds, idx, start_lev=700.):
     
-        ## get start_date, start_lat, and start_lon
-        ## start in the middle of the day
-        self.start_date = ds.isel(date=idx).date.values + np.timedelta64(12,'h')
+        ## get center_date, start_lat, and start_lon
+        ## center in the middle of the day
+        self.center_date = ds.isel(date=idx).date.values + np.timedelta64(12,'h')
         self.start_lat = ds.isel(date=idx).lat.values
         self.start_lon = ds.isel(date=idx).lon.values
         self.start_lev = start_lev
-        print(self.start_date, self.start_lat, self.start_lon)
+        print(self.center_date, self.start_lat, self.start_lon)
         
         self.varlst = ['time', 'latitude', 'longitude', 'level', 'q', 'u', 'v', 'w']     
         self.calc_vars = ['drying_ratio', 'dq']
         
-        self.date_lst = pd.date_range(end=self.start_date, periods=72, freq='H')
+        self.date_lst = pd.date_range(end=self.center_date, periods=72, freq='H')
+
+        ## create list of dates based on start date
+        start_date = ds.isel(date=idx).date.values - np.timedelta64(3,'D')
+        end_date = ds.isel(date=idx).date.values
+        self.date_lst_era = pd.date_range(start_date, end_date, freq='1D')
     
     def read_data(self):    
         # read ERA5 data
-        fpath = '/data/projects/Comet/cwp140/downloads/'
-        fname = fpath + 'ERA5/era5_uvwq_prs_20000214_20000218_2000.nc'
-        self.ds1 = xr.open_dataset(fname)
+        # create list of daily ERA5 files for each AR
+        ds_lst = []
+        for j, date in enumerate(self.date_lst_era):
+            year = date.year
+            month = date.strftime("%m")
+            day = date.strftime("%d")
+            
+            path_to_data = '/expanse/lustre/scratch/dnash/temp_project/downloaded/ERA5/{0}/'.format(year)
+            fname = "era5_nhemi_025dg_1hr_uvwq_{0}{1}{2}.nc".format(year, month, day)
+            
+            ds2 = xr.open_dataset(path_to_data+fname)
+            ds_lst.append(ds2)
+        
+        # concatenate ds_lst
+        self.ds1 = xr.concat(ds_lst, dim='time')
 
         ## read MERRA2 data - not sure if we need this anymore
         # fname = '/data/downloaded/Reanalysis/MERRA2/M2I3NPASM.5.12.4_raw/1980/MERRA2_100.inst3_3d_asm_Np.19801231.nc4'
@@ -57,7 +74,7 @@ class calculate_backward_trajectory:
     def create_empty_array(self):   
    
         # initial conditions
-        t0 = self.ds1.interp(latitude=self.start_lat, longitude=self.start_lon, level=self.start_lev, time=self.start_date)
+        t0 = self.ds1.interp(latitude=self.start_lat, longitude=self.start_lon, level=self.start_lev, time=self.center_date)
         
         ## append initial conditions to empty DataFrame
         t0_vals = []
@@ -158,13 +175,17 @@ class calculate_backward_trajectory:
     def compute_trajectory(self):
         
         ## read data TODO flexible for date input
+        print('Reading ERA5 data...')
         self.read_data()
         
         ## build dataframe with initial conditions
+        print('Calculating initial conditions...')
         self.create_empty_array()
         
         ## loop through the remaining 72 hours
+        print('Calculating trajectory ...')
         for i, idx in enumerate(np.arange(1, 72, 1)):
+            print('... time step {0}'.format(idx))
             self.get_values_at_current_timestep(idx)
         
         ## convert specific humidity to g kg-1

@@ -5,6 +5,8 @@ Description: utility functions
 """
 
 import math
+import glob
+import re
 
 def roundPartial(value, resolution):
     return round(value / resolution) * resolution
@@ -45,3 +47,18 @@ def haversine(lat1, lon1, lat2, lon2):
 
     return distance
 
+def list_of_processed_files(year):
+    '''
+    Returns a list of ERA5 files that have been downloaded
+    '''
+    processed_dates = []
+    list_of_files = glob.glob('/expanse/lustre/scratch/dnash/temp_project/downloaded/ERA5/*/*')
+    for fname in list_of_files:
+
+        # pull the initialization date from the filename
+        regex = re.compile(r'\d+')
+        date_string = regex.findall(fname)
+        date_string = date_string[-1]
+        processed_dates.append(date_string)
+
+    return processed_dates
