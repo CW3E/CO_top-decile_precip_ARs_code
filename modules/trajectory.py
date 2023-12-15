@@ -74,7 +74,7 @@ class calculate_backward_trajectory:
         # self.ds1 = xr.concat(ds_lst, dim='time')
 
         
-        self.ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords', preprocess=self.preprocess)
+        self.ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
 
         ## read MERRA2 data - not sure if we need this anymore
         # fname = '/data/downloaded/Reanalysis/MERRA2/M2I3NPASM.5.12.4_raw/1980/MERRA2_100.inst3_3d_asm_Np.19801231.nc4'
@@ -157,18 +157,8 @@ class calculate_backward_trajectory:
 
         ## now the new location is the old location plus the distances
         new_lat = t0.latitude + del_y
-        # if new_lat <= 0.:
-        #     break
-        # elif new_lat >= 90.:
-        #     break
         new_lon = t0.longitude + del_x
-        # if new_lon < -180.:
-        #     new_lon = new_lon + 360.
         new_lev = t0.level + del_z
-        # if new_lev < 1.:
-        #     break
-        # elif new_lev > 1000.:
-        #     break
         new_date = t0.time - np.timedelta64(1,'h')
 
         ## interpolate to new point
@@ -181,6 +171,8 @@ class calculate_backward_trajectory:
             else:
                 t1_vals.append(float(t1[i].values))
         self.df.iloc[idx] = t1_vals
+
+        return self.df
         
     def compute_trajectory(self):
         
@@ -196,7 +188,19 @@ class calculate_backward_trajectory:
         print('Calculating trajectory ...')
         for i, idx in enumerate(np.arange(1, 72, 1)):
             print('... time step {0}'.format(idx))
-            self.get_values_at_current_timestep(idx)
+            self.df = self.get_values_at_current_timestep(idx)
+            
+            ## write break statements
+            if self.df.iloc[idx]['latitude'] <= 0.:
+                break
+            elif self.df.iloc[idx]['latitude'] >= 90.:
+                break
+            if self.df.iloc[idx]['longitude'] < -180.:
+                self.df.iloc[idx]['longitude'] = self.df.iloc[idx]['longitude'] + 360.
+            if self.df.iloc[idx]['level'] < 1.:
+                break
+            elif self.df.iloc[idx]['level'] > 1000.:
+                break
         
         ## convert specific humidity to g kg-1
         self.df['q'] = self.df['q']* 1000
