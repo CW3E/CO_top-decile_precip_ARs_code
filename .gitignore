@@ -12,6 +12,6 @@
 
 # ignore pycache files
 *.pyc
-
+modules/__pycache__/*
 ## ignore slurm_out files
 download/ERA5/slurm_out/*
