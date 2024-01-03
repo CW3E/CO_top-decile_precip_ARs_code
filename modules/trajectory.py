@@ -31,13 +31,13 @@ class calculate_backward_trajectory:
     
     '''
     
-    def __init__(self, ds, idx, start_lev=700.):
+    def __init__(self, ds, event_date, start_lev=700.):
     
         ## get center_date, start_lat, and start_lon
         ## center in the middle of the day
-        self.center_date = ds.isel(date=idx).date.values + np.timedelta64(12,'h')
-        self.start_lat = ds.isel(date=idx).lat.values
-        self.start_lon = ds.isel(date=idx).lon.values
+        self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(12,'h')
+        self.start_lat = ds.sel(date=event_date).lat.values
+        self.start_lon = ds.sel(date=event_date).lon.values
         self.start_lev = start_lev
         print(self.center_date, self.start_lat, self.start_lon)
         
@@ -47,8 +47,8 @@ class calculate_backward_trajectory:
         self.date_lst = pd.date_range(end=self.center_date, periods=72, freq='H')
 
         ## create list of dates based on start date
-        start_date = ds.isel(date=idx).date.values - np.timedelta64(3,'D')
-        end_date = ds.isel(date=idx).date.values
+        start_date = ds.sel(date=event_date).date.values - np.timedelta64(3,'D')
+        end_date = ds.sel(date=event_date).date.values
         self.date_lst_era = pd.date_range(start_date, end_date, freq='1D')
 
     def preprocess(self, ds):

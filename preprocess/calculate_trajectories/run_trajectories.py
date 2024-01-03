@@ -23,7 +23,8 @@ job_info = str(sys.argv[2]) # this is the job name
 config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
 ddict = config[job_info] # pull the job info from the dict
 
-HUC8_ID = ddict['HUC8']
+HUC8_ID = ddict['HUC8_ID']
+event_date = ddict['date']
 
 ## set starting lat/lon
 ## choose this based on extreme precip days
@@ -32,22 +33,13 @@ ds = xr.open_dataset(fname)
 # start with single event from single watershed
 ds = ds.sel(HUC8=HUC8_ID)
 ds = ds.where(ds.extreme == 1, drop=True)
-nevents = len(ds.prec) ## number of events for this HUC8
 
-## loop through the current HUC8 times
-ds_lst = []
-start_date_lst = []
-for i in range(nevents):
-    s = calculate_backward_trajectory(ds=ds, idx=i, start_lev=700.)
-    df = s.compute_trajectory()
-    new_ds = df.to_xarray()
-    start_date_lst.append(df.time.iloc[0])
-    ds_lst.append(new_ds)
-
-## save all trajectories for current HUC8 as single netcdf
-final_ds = xr.concat(ds_lst, pd.Index(start_date_lst, name="start_date"))
+## calculate trajectory for current 
+s = calculate_backward_trajectory(ds=ds, event_date=event_date, start_lev=700.)
+df = s.compute_trajectory()
+new_ds = df.to_xarray()
 
 ## save trajectory data to netCDF file
-print('Writing {0} to netCDF ....'.format(HUC8_ID))
-out_fname = path_to_data + 'preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID) 
-final_ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
+print('Writing {0} {1} to netCDF ....'.format(HUC8_ID, event_date))
+out_fname = path_to_data + 'preprocessed/ERA5_trajectories/PRISM_HUC8_{0}_{1}.nc'.format(HUC8_ID, event_date) 
+new_ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

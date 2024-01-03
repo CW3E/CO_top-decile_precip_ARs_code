@@ -6,13 +6,14 @@
 ######################################################################
 
 ## import libraries
+import os, sys
 import pandas as pd
 import yaml
 from itertools import chain
 
 # import personal modules
 # Path to modules
-sys.path.append('../modules')
+sys.path.append('../../modules')
 from utils import list_of_processed_files
 
 ## create list of month/year/day

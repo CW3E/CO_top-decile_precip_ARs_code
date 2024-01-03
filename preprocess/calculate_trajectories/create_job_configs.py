@@ -8,6 +8,7 @@
 import yaml
 from itertools import chain
 import xarray as xr
+import pandas as pd
 
 ## get list of HUC8 trajectories
 path_to_data = '/expanse/lustre/scratch/dnash/temp_project/'
@@ -22,25 +23,36 @@ filecounter = 0
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, HUC8 in enumerate(HUC8_lst):
-    jobcounter += 1
-    d = {'job_{0}'.format(jobcounter):
-         {'HUC8_ID': HUC8}}
-    d_lst.append(d)
+for i, HUC8_ID in enumerate(HUC8_lst):
+    tmp = ds.sel(HUC8=HUC8_ID)
+    tmp = tmp.where(tmp.extreme == 1, drop=True)
+    event_dates = tmp.date.values
     
-    if (jobcounter == 999):
-        filecounter += 1
-        ## merge all the dictionaries to one
-        dest = dict(chain.from_iterable(map(dict.items, d_lst)))
-        njob_lst.append(len(d_lst))
-        ## write to .yaml file and close
-        file=open("config_{0}.yaml".format(str(filecounter)),"w")
-        yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
-        file.close()
+    ### Loop through events for each HUC8 ###
+    for j, edate in enumerate(event_dates):
+        ts = pd.to_datetime(str(edate)) 
+        ed = ts.strftime('%Y%m%d')
+        print(HUC8_ID, ed)
+    
+        jobcounter += 1
+        d = {'job_{0}'.format(jobcounter):
+             {'HUC8_ID': HUC8_ID,
+              'date': ed}}
+        d_lst.append(d)
         
-        ## reset jobcounter and d_lst
-        jobcounter = 0
-        d_lst = []
+        if (jobcounter == 999):
+            filecounter += 1
+            ## merge all the dictionaries to one
+            dest = dict(chain.from_iterable(map(dict.items, d_lst)))
+            njob_lst.append(len(d_lst))
+            ## write to .yaml file and close
+            file=open("config_{0}.yaml".format(str(filecounter)),"w")
+            yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
+            file.close()
+            
+            ## reset jobcounter and d_lst
+            jobcounter = 0
+            d_lst = []
         
 ## now save the final config
 filecounter += 1
