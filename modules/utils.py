@@ -7,9 +7,10 @@ Description: utility functions
 import math
 import glob
 import re
+import numpy as np
 
 def roundPartial(value, resolution):
-    return round(value / resolution) * resolution
+    return np.round(value / resolution) * resolution
 
 def round_latlon_degree(df, res):
 
@@ -62,3 +63,23 @@ def list_of_processed_files(year):
         processed_dates.append(date_string)
 
     return processed_dates
+
+def find_closest_MERRA2_lon(lon):
+    ## MERRA2 longitudes are every 0.625 degree
+    merra2_lons = np.arange(-180.0, 180., 0.625)
+    
+    myList = merra2_lons
+    myNumber = lon
+    final = min(myList, key=lambda x:abs(x-myNumber))
+    
+    return final
+
+def find_closest_MERRA2_lon_df(row):
+    ## MERRA2 longitudes are every 0.625 degree
+    merra2_lons = np.arange(-180.0, 180., 0.625)
+    
+    myList = merra2_lons
+    myNumber = row['longitude']
+    final = min(myList, key=lambda x:abs(x-myNumber))
+    
+    return final
