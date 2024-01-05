@@ -18,5 +18,5 @@
 source /home/${USER}/.bashrc
 source activate eaton-scripps-CO 
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_4.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_5.txt`
 eval $linevar
