@@ -83,3 +83,12 @@ def find_closest_MERRA2_lon_df(row):
     final = min(myList, key=lambda x:abs(x-myNumber))
     
     return final
+
+def select_months_ds(ds, mon_s, mon_e):    
+    # Select months from xarray dataset
+    if mon_s > mon_e:
+        idx = (ds.start_date.dt.month >= mon_s) | (ds.start_date.dt.month <= mon_e)
+    else:
+        idx = (ds.start_date.dt.month >= mon_s) & (ds.start_date.dt.month <= mon_e)
+    ds = ds.sel(start_date=idx)
+    return ds
