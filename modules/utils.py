@@ -84,11 +84,17 @@ def find_closest_MERRA2_lon_df(row):
     
     return final
 
-def select_months_ds(ds, mon_s, mon_e):    
+def select_months_ds(ds, mon_s, mon_e, time_varname):    
     # Select months from xarray dataset
     if mon_s > mon_e:
-        idx = (ds.start_date.dt.month >= mon_s) | (ds.start_date.dt.month <= mon_e)
+        idx = (ds[time_varname].dt.month >= mon_s) | (ds[time_varname].dt.month <= mon_e)
     else:
-        idx = (ds.start_date.dt.month >= mon_s) & (ds.start_date.dt.month <= mon_e)
-    ds = ds.sel(start_date=idx)
+        idx = (ds[time_varname].dt.month >= mon_s) & (ds[time_varname].dt.month <= mon_e)
+    
+    if time_varname == 'time':
+        ds = ds.sel(time=idx)
+    elif time_varname == 'start_date':
+        ds = ds.sel(start_date=idx)
+    elif time_varname == 'date':
+        ds = ds.sel(date=idx)
     return ds

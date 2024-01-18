@@ -9,6 +9,7 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import dask
+from utils import roundPartial, find_closest_MERRA2_lon
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
@@ -211,3 +212,91 @@ class calculate_backward_trajectory:
         self.df['drying_ratio'] = (self.df['dq']/self.df['q'])*100.# convert to %    
         
         return self.df
+    
+def combine_IVT_and_trajectory(ERA5):
+    ## load ERA5 IVT data
+    start_date = ERA5.start_date.values - np.timedelta64(3,'D')
+    end_date = ERA5.start_date.values
+    print(start_date, end_date)
+
+    dates = pd.date_range(start=start_date, end=end_date, freq='1D')
+    # put into pandas df
+    d ={"date": dates}
+    df = pd.DataFrame(data=d)
+    df['day']= df['date'].dt.day.map("{:02}".format)
+    df['month']= df['date'].dt.month.map("{:02}".format)
+    df['year']= df['date'].dt.year
+
+    # create list of daily ERA5 files
+    filenames = []
+    for j, row in df.iterrows():
+        filenames.append('/data/downloaded/Reanalysis/ERA5/IVT/{0}/ERA5_IVT_{0}{1}{2}.nc'.format(row['year'], row['month'], row['day']))
+        # open all files within the AR period
+
+    ivt = xr.open_mfdataset(filenames, combine='by_coords', parallel=False)
+
+
+    ## interpolate IVT to trajectory points
+    ivt = ivt.interp(lat=ERA5.lat, lon=ERA5.lon, time=ERA5.time)
+    ivt = ivt.compute()
+
+    ## merge IVT, uIVT, vIVT, and IWV to trajectory ds
+    ERA5 = xr.merge([ivt, ERA5])
+    
+    return ERA5
+
+def combine_arscale_and_trajectory(ERA5, arscale, ar):
+    ## create a list of lat/lons that match MERRA2 spacing
+    ## lat and lon points from trajectory
+
+    new_lst = []
+    for lon in ERA5.lon.values:
+        new_lst.append(find_closest_MERRA2_lon(lon))
+
+    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time') 
+    x = xr.DataArray(new_lst, dims=['location'])
+    y = xr.DataArray(roundPartial(ERA5.lat.values, 0.5), dims=['location'])
+
+    x = xr.DataArray(ERA5.lon.values, dims=("location"), coords={"lon": x}, name='traj_lons')
+    y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
+
+    # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
+    z = xr.merge([x, y, t])
+
+    ## Now loop through the lat/loin pairs and see where they match
+    idx_lst = []
+    for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
+        for j, (lon, lat) in enumerate(zip(arscale.lon.values, arscale.lat.values)):
+            ## test if lat/lon pair matches
+            result_variable = (x == lon) & (y == lat)
+
+            if (result_variable == True):
+                idx = (i, j)
+                idx_lst.append(idx)
+
+    if len(idx_lst) > 0:
+        ## take first time the trajectory crosses the coast
+        idx = idx_lst[0]
+        print(idx)
+        ## this is the time of the trajectory when it crosses west coast
+        time_match = z.sel(location=idx[0]).time.values
+        ## this is the value of MERRA2 AR scale etc. when the trajectory crosses the coast
+        arscale_val = arscale.sel(location=idx[1]) # first grab the location - this should be an exact match
+        arscale_val = arscale_val.sel(time=time_match, method='nearest').ar_scale.values # now grab the nearest time since ERA5 is hourly and MERRA2 is 3-hourly
+        print(arscale_val)
+        ## now put those values into the trajectory dataset
+        ERA5 = ERA5.assign(ar_scale=arscale_val)
+        
+        ## lets also grab whether rutz et al AR was detected
+        ar_val = ar.sel(location=idx[1])
+        ar_val = ar_val.sel(time=time_match, method='nearest').AR.values
+        print(ar_val)
+        ## assign value to trajectory dataset
+        ERA5 = ERA5.assign(ar=ar_val)
+        
+    else:
+        ## since the trajectory didn't cross the west coast, set ar_scale to nan
+        ERA5 = ERA5.assign(ar_scale=np.nan)
+        ERA5 = ERA5.assign(ar=np.nan)
+
+    return ERA5
