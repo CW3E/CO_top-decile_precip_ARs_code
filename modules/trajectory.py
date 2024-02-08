@@ -9,7 +9,10 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import dask
+import geopandas as gpd
+import shapely.geometry
 from utils import roundPartial, find_closest_MERRA2_lon
+
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
@@ -263,7 +266,7 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar):
     # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
     z = xr.merge([x, y, t])
 
-    ## Now loop through the lat/loin pairs and see where they match
+    ## Now loop through the lat/lon pairs and see where they match
     idx_lst = []
     for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
         for j, (lon, lat) in enumerate(zip(arscale.lon.values, arscale.lat.values)):
@@ -300,3 +303,92 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar):
         ERA5 = ERA5.assign(ar=np.nan)
 
     return ERA5
+
+
+def combine_coastal_IVT_and_trajectory(ERA5, arscale):
+    ## create a list of lat/lons that match MERRA2 spacing
+    ## lat and lon points from trajectory
+
+    new_lst = []
+    for lon in ERA5.lon.values:
+        new_lst.append(find_closest_MERRA2_lon(lon))
+
+    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time') 
+    x = xr.DataArray(new_lst, dims=['location'])
+    y = xr.DataArray(roundPartial(ERA5.lat.values, 0.5), dims=['location'])
+    IVT = xr.DataArray(ERA5.IVT.values, dims=['location'], name='IVT')
+
+    x = xr.DataArray(ERA5.lon.values, dims=("location"), coords={"lon": x}, name='traj_lons')
+    y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
+
+    # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
+    z = xr.merge([x, y, t, IVT])
+
+    ## Now loop through the lat/lon pairs and see where they match
+    idx_lst = []
+    for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
+        for j, (lon, lat) in enumerate(zip(arscale.lon.values, arscale.lat.values)):
+            ## test if lat/lon pair matches
+            result_variable = (x == lon) & (y == lat)
+
+            if (result_variable == True):
+                idx = (i, j)
+                idx_lst.append(idx)
+
+    if len(idx_lst) > 0:
+        ## take first time the trajectory crosses the coast
+        idx = idx_lst[0]
+        print(idx)
+        ## this is the IVT of the trajectory when it crosses west coast
+        IVT_match = z.sel(location=idx[0]).IVT.values
+        
+        ## assign value to trajectory dataset
+        ERA5 = ERA5.assign(coastal_IVT=IVT_match)
+        
+    else:
+        ## since the trajectory didn't cross the west coast, set ar_scale to nan
+        ERA5 = ERA5.assign(coastal_IVT=np.nan)
+
+    return ERA5
+
+def calculate_heatmaps_from_trajectories(HUC8_ID):
+    fname = '/home/dnash/comet_data/preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    ERA5 = xr.open_dataset(fname)
+    
+    ## open as geopandas dataframe
+    df = ERA5.to_dataframe()
+    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
+
+    ### Code is based on https://james-brennan.github.io/posts/fast_gridding_geopandas/
+
+    ### BUILD A GRID 
+    # total area for the grid
+    xmin, ymin, xmax, ymax= gdf.total_bounds
+    xmin, ymin, xmax, ymax= [-175., 20., -85.,  63.]
+    # how many cells across and down
+    n_cells=100
+    cell_size = (xmax-xmin)/n_cells
+    # projection of the grid
+    crs = "EPSG:4326"
+    # create the cells in a loop
+    grid_cells = []
+    for x0 in np.arange(xmin, xmax+cell_size, cell_size ):
+        for y0 in np.arange(ymin, ymax+cell_size, cell_size):
+            # bounds
+            x1 = x0-cell_size
+            y1 = y0+cell_size
+            grid_cells.append( shapely.geometry.box(x0, y0, x1, y1)  )
+    cell = gpd.GeoDataFrame(grid_cells, columns=['geometry'], 
+                                     crs=crs)
+
+    merged = gpd.sjoin(gdf, cell, how='left', predicate='within')
+
+    # make a simple count variable that we can sum
+    merged['n_traj']=1
+    # Compute stats per grid cell -- aggregate fires to grid cells with dissolve
+    dissolve = merged.dissolve(by="index_right", aggfunc="count")
+    # put this into cell
+    cell.loc[dissolve.index, 'n_traj'] = dissolve.n_traj.values
+    print(cell['n_traj'].max())
+    
+    return cell

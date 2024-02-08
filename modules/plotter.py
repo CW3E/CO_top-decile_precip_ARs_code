@@ -18,10 +18,13 @@ import colorsys
 import cmocean.cm as cmo
 from matplotlib.colors import LinearSegmentedColormap # Linear interpolation for color maps
 import matplotlib.patches as mpatches
+from matplotlib import cm, colors as clr
+from matplotlib.colorbar import Colorbar # different way to handle colorbar
 import matplotlib.animation as animation
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import seaborn as sns
+import customcmaps as ccmaps
 
 def plot_terrain(ax, ext):
     fname = '/work/bkawzenuk_work/Maps/data/ETOPO1_Bed_c_gmt4.grd'
@@ -133,7 +136,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     ax.set_yticks(yticks, crs=datacrs)
     plt.yticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
     plt.xticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
-    # ax.ticklabel_format(axis='both', style='plain')
+    ax.ticklabel_format(axis='both', style='plain')
 
     ## Map Extent
     # If no extent is given, use global extent
@@ -555,3 +558,23 @@ class SeabornFig2Grid():
 
     def _resize(self, evt=None):
         self.sg.fig.set_size_inches(self.fig.get_size_inches())
+        
+def plot_arscale_cbar(cbax, orientation):
+    kw_ticklabels = {'size': 8, 'color': 'dimgray', 'weight': 'light'}
+    # create custom colorbar for arscale
+    upper = 5 # the upper limit for the colorbar
+    lower = 1 # the lower limit for the colorbar
+    N = 5 # the number of discrete intervals
+    deltac = (upper-lower)/(2*(N-1))
+    cmap, norm, cbar_tcks = ccmaps.cmap('arscale')
+    norm = clr.Normalize() # this alters the state of the Normalize object
+    arscale_cbar = cm.ScalarMappable(norm=norm, cmap=cmap)
+    arscale_cbar.set_array([lower-deltac,upper+deltac])
+    if orientation == 'horizontal':
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'horizontal', ticklocation = 'bottom', ticks=[1, 2, 3, 4, 5])
+        cb.set_label('AR Scale', fontsize=10)
+        cb.ax.set_xticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
+    else:
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'vertical', ticklocation = 'right', ticks=[1, 2, 3, 4, 5])
+        cb.set_label('AR Scale', fontsize=10)
+        cb.ax.set_yticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
