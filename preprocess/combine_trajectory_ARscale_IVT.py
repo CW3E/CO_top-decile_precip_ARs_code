@@ -56,12 +56,11 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
         tmp = ERA5.sel(start_date=st_date)
         # ## combine IVT data   
         # tmp = combine_IVT_and_trajectory(tmp)
-        # ## add arscale
+        
+        # ## add arscale, Rutz AR, and coastal IVT
         print('Combining AR Scale ... {0}'.format(i))
         tmp = combine_arscale_and_trajectory(tmp, arscale, ar)
-        
-        ## add coastal IVT
-        tmp = combine_coastal_IVT_and_trajectory(tmp, arscale)
+
         ds_lst.append(tmp)
 
     ## merge final dataset

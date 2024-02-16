@@ -357,68 +357,6 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar):
 
     return ERA5
 
-
-def combine_coastal_IVT_and_trajectory(ERA5, arscale):
-    ## create a list of lat/lons that match MERRA2 spacing
-    ## lat and lon points from trajectory
-
-    new_lst = []
-    for lon in ERA5.lon.values:
-        new_lst.append(find_closest_MERRA2_lon(lon))
-
-    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time') 
-    x = xr.DataArray(new_lst, dims=['location'])
-    y = xr.DataArray(roundPartial(ERA5.lat.values, 0.5), dims=['location'])
-    IVT = xr.DataArray(ERA5.IVT.values, dims=['location'], name='IVT')
-
-    x = xr.DataArray(ERA5.lon.values, dims=("location"), coords={"lon": x}, name='traj_lons')
-    y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
-
-    # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
-    z = xr.merge([x, y, t, IVT])
-
-    ## Open text file with coordinates of coastal region along N. America West Coast
-    print('Gathering coastal points')
-    textpts_fname = '../data/latlon_coast-modified.txt'
-    df = pd.read_csv(textpts_fname, header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
-    df['longitude'] = df['longitude']*-1
-
-    ## create column with closest MERRA2 lons
-    df['MERRA2_lon'] = df.apply(lambda row: find_closest_MERRA2_lon_df(row), axis=1)
-
-    d = {'lat' : df['latitude'],
-        'lon' : df['MERRA2_lon']}
-
-    txtpts = pd.DataFrame(d)
-    txtpts = txtpts.drop_duplicates(subset=['lat', 'lon'])
-    
-    ## Now loop through the lat/lon pairs and see where they match
-    idx_lst = []
-    for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
-        for j, (lon, lat) in enumerate(zip(txtpts.lon.values, txtpts.lat.values)):
-            ## test if lat/lon pair matches
-            result_variable = (x == lon) & (y == lat)
-
-            if (result_variable == True):
-                idx = (i, j)
-                idx_lst.append(idx)
-
-    if len(idx_lst) > 0:
-        ## take first time the trajectory crosses the coast
-        idx = idx_lst[0]
-        print(idx)
-        ## this is the IVT of the trajectory when it crosses west coast
-        IVT_match = z.sel(location=idx[0]).IVT.values
-        
-        ## assign value to trajectory dataset
-        ERA5 = ERA5.assign(coastal_IVT=IVT_match)
-        
-    else:
-        ## since the trajectory didn't cross the west coast, set ar_scale to nan
-        ERA5 = ERA5.assign(coastal_IVT=np.nan)
-
-    return ERA5
-
 def calculate_heatmaps_from_trajectories(HUC8_ID):
     fname = '/home/dnash/comet_data/preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     ERA5 = xr.open_dataset(fname)
