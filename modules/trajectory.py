@@ -11,7 +11,7 @@ import numpy as np
 import dask
 import geopandas as gpd
 import shapely.geometry
-from utils import roundPartial, find_closest_MERRA2_lon
+from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_range, roundPartial
 
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
@@ -251,7 +251,7 @@ def combine_IVT_and_trajectory(ERA5):
 def combine_arscale_and_trajectory(ERA5, arscale, ar):
     ## create a list of lat/lons that match MERRA2 spacing
     ## lat and lon points from trajectory
-
+    print('Regridding ERA5 trajectory to MERRA2 grid')
     new_lst = []
     for lon in ERA5.lon.values:
         new_lst.append(find_closest_MERRA2_lon(lon))
@@ -265,11 +265,27 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar):
 
     # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
     z = xr.merge([x, y, t])
+    
+    ## Open text file with coordinates of coastal region along N. America West Coast
+    print('Gathering coastal points')
+    textpts_fname = '../data/latlon_coast-modified.txt'
+    df = pd.read_csv(textpts_fname, header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
+    df['longitude'] = df['longitude']*-1
+
+    ## create column with closest MERRA2 lons
+    df['MERRA2_lon'] = df.apply(lambda row: find_closest_MERRA2_lon_df(row), axis=1)
+
+    d = {'lat' : df['latitude'],
+        'lon' : df['MERRA2_lon']}
+
+    txtpts = pd.DataFrame(d)
+    txtpts = txtpts.drop_duplicates(subset=['lat', 'lon'])
 
     ## Now loop through the lat/lon pairs and see where they match
+    print('Finding coastal intersection')
     idx_lst = []
     for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
-        for j, (lon, lat) in enumerate(zip(arscale.lon.values, arscale.lat.values)):
+        for j, (lon, lat) in enumerate(zip(txtpts.lon.values, txtpts.lat.values)):
             ## test if lat/lon pair matches
             result_variable = (x == lon) & (y == lat)
 
@@ -283,24 +299,61 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar):
         print(idx)
         ## this is the time of the trajectory when it crosses west coast
         time_match = z.sel(location=idx[0]).time.values
-        ## this is the value of MERRA2 AR scale etc. when the trajectory crosses the coast
-        arscale_val = arscale.sel(location=idx[1]) # first grab the location - this should be an exact match
-        arscale_val = arscale_val.sel(time=time_match, method='nearest').ar_scale.values # now grab the nearest time since ERA5 is hourly and MERRA2 is 3-hourly
-        print(arscale_val)
+        
+        # get the location index value where the lat/lon matches the coastal intersection value
+        idx_ds = int(arscale.location.where((arscale.lat==txtpts.iloc[idx[1]].lat) & (arscale.lon==txtpts.iloc[idx[1]].lon), drop=True).values)
+        
+        #####################
+        ### STRICT METHOD ###
+        #####################
+        
+        ## Gather arscale of closest grid and time value
+        tmp1 = arscale.sel(location=idx_ds)
+        arscale_val = tmp1.sel(time=time_match).ar_scale.values
+        ERA5 = ERA5.assign(arscale_strict=arscale_val)
+        
+        ## Gather Rutz AR value of closest grid and time value
+        tmp1 = ar.sel(location=idx_ds)
+        ar_val = tmp1.sel(time=time_match).AR.values
+        ERA5 = ERA5.assign(ar_strict=ar_val)
+        
+        coastal_IVT_val = tmp1.sel(time=time_match).IVT.values
+        ERA5 = ERA5.assign(coastal_IVT_strict=coastal_IVT_val)
+        
+        
+        #######################
+        ### FLEXIBLE METHOD ###
+        #######################
+        
+        ## select the surrounding grid points
+        tmp = arscale.sel(location=slice(idx_ds-2, idx_ds+3))
+
+        ## select the 12 hours on each side of the time step
+        sta = time_match - np.timedelta64(12,'h')
+        sto = time_match + np.timedelta64(12,'h')
+        arscale_val = tmp.sel(time=slice(sta, sto)).ar_scale.values.max()
         ## now put those values into the trajectory dataset
         ERA5 = ERA5.assign(ar_scale=arscale_val)
         
         ## lets also grab whether rutz et al AR was detected
-        ar_val = ar.sel(location=idx[1])
-        ar_val = ar_val.sel(time=time_match, method='nearest').AR.values
-        print(ar_val)
+        tmp1 = ar.sel(location=slice(idx_ds-2, idx_ds+3))
+        ar_val = tmp1.sel(time=slice(sta, sto)).AR.values.max()
+        
+        coastal_IVT_val = tmp.sel(time=slice(sta, sto)).IVT.values.max()
+
         ## assign value to trajectory dataset
         ERA5 = ERA5.assign(ar=ar_val)
+        ERA5 = ERA5.assign(coastal_IVT=coastal_IVT_val)
         
     else:
         ## since the trajectory didn't cross the west coast, set ar_scale to nan
         ERA5 = ERA5.assign(ar_scale=np.nan)
         ERA5 = ERA5.assign(ar=np.nan)
+        ERA5 = ERA5.assign(coastal_IVT=np.nan)
+        
+        ERA5 = ERA5.assign(ar_scale_strict=np.nan)
+        ERA5 = ERA5.assign(ar_strict=np.nan)
+        ERA5 = ERA5.assign(coastal_IVT_strict=np.nan)
 
     return ERA5
 
@@ -324,10 +377,25 @@ def combine_coastal_IVT_and_trajectory(ERA5, arscale):
     # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
     z = xr.merge([x, y, t, IVT])
 
+    ## Open text file with coordinates of coastal region along N. America West Coast
+    print('Gathering coastal points')
+    textpts_fname = '../data/latlon_coast-modified.txt'
+    df = pd.read_csv(textpts_fname, header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
+    df['longitude'] = df['longitude']*-1
+
+    ## create column with closest MERRA2 lons
+    df['MERRA2_lon'] = df.apply(lambda row: find_closest_MERRA2_lon_df(row), axis=1)
+
+    d = {'lat' : df['latitude'],
+        'lon' : df['MERRA2_lon']}
+
+    txtpts = pd.DataFrame(d)
+    txtpts = txtpts.drop_duplicates(subset=['lat', 'lon'])
+    
     ## Now loop through the lat/lon pairs and see where they match
     idx_lst = []
     for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
-        for j, (lon, lat) in enumerate(zip(arscale.lon.values, arscale.lat.values)):
+        for j, (lon, lat) in enumerate(zip(txtpts.lon.values, txtpts.lat.values)):
             ## test if lat/lon pair matches
             result_variable = (x == lon) & (y == lat)
 

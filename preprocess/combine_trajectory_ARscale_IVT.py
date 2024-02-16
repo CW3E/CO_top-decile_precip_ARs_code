@@ -26,14 +26,17 @@ path_to_figs = '../figs/'      # figures
 
 
 ## load Rutz AR
+print('Loading Rutz AR data')
 fname = path_to_data + 'preprocessed/MERRA2/MERRA2_Rutz_US-West.nc'
 ar = xr.open_dataset(fname)
 
 ## load AR scale
+print('Loading MERRA2 scale')
 fname = path_to_data + 'preprocessed/MERRA2/MERRA2_ARScale_US-West.nc'
 arscale = xr.open_dataset(fname)
 
 ## load HUC8 IDs
+print('Loading HUC8 IDs')
 fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
 ds = xr.open_dataset(fname)
 HUC8_IDs = ds.HUC8.values ## get list of HUC8 IDs
@@ -54,7 +57,8 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
         # ## combine IVT data   
         # tmp = combine_IVT_and_trajectory(tmp)
         # ## add arscale
-        # tmp = combine_arscale_and_trajectory(tmp, arscale, ar)
+        print('Combining AR Scale ... {0}'.format(i))
+        tmp = combine_arscale_and_trajectory(tmp, arscale, ar)
         
         ## add coastal IVT
         tmp = combine_coastal_IVT_and_trajectory(tmp, arscale)
