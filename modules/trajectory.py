@@ -9,6 +9,10 @@ import xarray as xr
 import pandas as pd
 import numpy as np
 import dask
+import geopandas as gpd
+import shapely.geometry
+from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_range, roundPartial
+
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
@@ -211,3 +215,182 @@ class calculate_backward_trajectory:
         self.df['drying_ratio'] = (self.df['dq']/self.df['q'])*100.# convert to %    
         
         return self.df
+    
+def combine_IVT_and_trajectory(ERA5):
+    ## load ERA5 IVT data
+    start_date = ERA5.start_date.values - np.timedelta64(3,'D')
+    end_date = ERA5.start_date.values
+    print(start_date, end_date)
+
+    dates = pd.date_range(start=start_date, end=end_date, freq='1D')
+    # put into pandas df
+    d ={"date": dates}
+    df = pd.DataFrame(data=d)
+    df['day']= df['date'].dt.day.map("{:02}".format)
+    df['month']= df['date'].dt.month.map("{:02}".format)
+    df['year']= df['date'].dt.year
+
+    # create list of daily ERA5 files
+    filenames = []
+    for j, row in df.iterrows():
+        filenames.append('/data/downloaded/Reanalysis/ERA5/IVT/{0}/ERA5_IVT_{0}{1}{2}.nc'.format(row['year'], row['month'], row['day']))
+        # open all files within the AR period
+
+    ivt = xr.open_mfdataset(filenames, combine='by_coords', parallel=False)
+
+
+    ## interpolate IVT to trajectory points
+    ivt = ivt.interp(lat=ERA5.lat, lon=ERA5.lon, time=ERA5.time)
+    ivt = ivt.compute()
+
+    ## merge IVT, uIVT, vIVT, and IWV to trajectory ds
+    ERA5 = xr.merge([ivt, ERA5])
+    
+    return ERA5
+
+def combine_arscale_and_trajectory(ERA5, arscale, ar):
+    ## create a list of lat/lons that match MERRA2 spacing
+    ## lat and lon points from trajectory
+    new_lst = []
+    for lon in ERA5.lon.values:
+        new_lst.append(find_closest_MERRA2_lon(lon))
+
+    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time') 
+    x = xr.DataArray(new_lst, dims=['location'])
+    y = xr.DataArray(roundPartial(ERA5.lat.values, 0.5), dims=['location'])
+
+    x = xr.DataArray(ERA5.lon.values, dims=("location"), coords={"lon": x}, name='traj_lons')
+    y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
+
+    # create a new dataset that has the trajectory lat and lons and the closest MERRA2 lat/lons as coords
+    z = xr.merge([x, y, t])
+    
+    ## Open text file with coordinates of coastal region along N. America West Coast
+    textpts_fname = '../data/latlon_coast-modified.txt'
+    df = pd.read_csv(textpts_fname, header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
+    df['longitude'] = df['longitude']*-1
+
+    ## create column with closest MERRA2 lons
+    df['MERRA2_lon'] = df.apply(lambda row: find_closest_MERRA2_lon_df(row), axis=1)
+
+    d = {'lat' : df['latitude'],
+        'lon' : df['MERRA2_lon']}
+
+    txtpts = pd.DataFrame(d)
+    txtpts = txtpts.drop_duplicates(subset=['lat', 'lon'])
+
+    ## Now loop through the lat/lon pairs and see where they match
+    idx_lst = []
+    for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):
+        for j, (lon, lat) in enumerate(zip(txtpts.lon.values, txtpts.lat.values)):
+            ## test if lat/lon pair matches
+            result_variable = (x == lon) & (y == lat)
+
+            if (result_variable == True):
+                idx = (i, j)
+                idx_lst.append(idx)
+
+    if len(idx_lst) > 0:
+        ## take first time the trajectory crosses the coast
+        idx = idx_lst[0]
+        ## this is the time of the trajectory when it crosses west coast
+        time_match = z.sel(location=idx[0]).time.values
+        
+        # get the location index value where the lat/lon matches the coastal intersection value
+        idx_ds = int(arscale.location.where((arscale.lat==txtpts.iloc[idx[1]].lat) & (arscale.lon==txtpts.iloc[idx[1]].lon), drop=True).values)
+        
+        #####################
+        ### STRICT METHOD ###
+        #####################
+        
+        ## Gather arscale of closest grid and time value
+        tmp1 = arscale.sel(location=idx_ds)
+        arscale_val = tmp1.sel(time=time_match, method='nearest').ar_scale.values
+        ERA5 = ERA5.assign(ar_scale_strict=arscale_val)
+        
+        ## Gather Rutz AR value of closest grid and time value
+        tmp1 = ar.sel(location=idx_ds)
+        ar_val = tmp1.sel(time=time_match, method='nearest').AR.values
+        ERA5 = ERA5.assign(ar_strict=ar_val)
+        
+        coastal_IVT_val = tmp1.sel(time=time_match, method='nearest').IVT.values
+        ERA5 = ERA5.assign(coastal_IVT_strict=coastal_IVT_val)
+        
+        
+        #######################
+        ### FLEXIBLE METHOD ###
+        #######################
+        
+        ## select the surrounding grid points
+        tmp = arscale.sel(location=slice(idx_ds-2, idx_ds+3))
+
+        ## select the 12 hours on each side of the time step
+        sta = time_match - np.timedelta64(12,'h')
+        sto = time_match + np.timedelta64(12,'h')
+        arscale_val = tmp.sel(time=slice(sta, sto)).ar_scale.values.max()
+        ## now put those values into the trajectory dataset
+        ERA5 = ERA5.assign(ar_scale=arscale_val)
+        
+        ## lets also grab whether rutz et al AR was detected
+        tmp1 = ar.sel(location=slice(idx_ds-2, idx_ds+3))
+        ar_val = tmp1.sel(time=slice(sta, sto)).AR.values.max()
+        
+        coastal_IVT_val = tmp1.sel(time=slice(sta, sto)).IVT.values.max()
+
+        ## assign value to trajectory dataset
+        ERA5 = ERA5.assign(ar=ar_val)
+        ERA5 = ERA5.assign(coastal_IVT=coastal_IVT_val)
+        
+    else:
+        ## since the trajectory didn't cross the west coast, set ar_scale to nan
+        ERA5 = ERA5.assign(ar_scale=np.nan)
+        ERA5 = ERA5.assign(ar=np.nan)
+        ERA5 = ERA5.assign(coastal_IVT=np.nan)
+        
+        ERA5 = ERA5.assign(ar_scale_strict=np.nan)
+        ERA5 = ERA5.assign(ar_strict=np.nan)
+        ERA5 = ERA5.assign(coastal_IVT_strict=np.nan)
+
+    return ERA5
+
+def calculate_heatmaps_from_trajectories(HUC8_ID):
+    fname = '/home/dnash/comet_data/preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    ERA5 = xr.open_dataset(fname)
+    
+    ## open as geopandas dataframe
+    df = ERA5.to_dataframe()
+    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
+
+    ### Code is based on https://james-brennan.github.io/posts/fast_gridding_geopandas/
+
+    ### BUILD A GRID 
+    # total area for the grid
+    xmin, ymin, xmax, ymax= gdf.total_bounds
+    xmin, ymin, xmax, ymax= [-175., 20., -85.,  63.]
+    # how many cells across and down
+    n_cells=100
+    cell_size = (xmax-xmin)/n_cells
+    # projection of the grid
+    crs = "EPSG:4326"
+    # create the cells in a loop
+    grid_cells = []
+    for x0 in np.arange(xmin, xmax+cell_size, cell_size ):
+        for y0 in np.arange(ymin, ymax+cell_size, cell_size):
+            # bounds
+            x1 = x0-cell_size
+            y1 = y0+cell_size
+            grid_cells.append( shapely.geometry.box(x0, y0, x1, y1)  )
+    cell = gpd.GeoDataFrame(grid_cells, columns=['geometry'], 
+                                     crs=crs)
+
+    merged = gpd.sjoin(gdf, cell, how='left', predicate='within')
+
+    # make a simple count variable that we can sum
+    merged['n_traj']=1
+    # Compute stats per grid cell -- aggregate fires to grid cells with dissolve
+    dissolve = merged.dissolve(by="index_right", aggfunc="count")
+    # put this into cell
+    cell.loc[dissolve.index, 'n_traj'] = dissolve.n_traj.values
+    print(cell['n_traj'].max())
+    
+    return cell

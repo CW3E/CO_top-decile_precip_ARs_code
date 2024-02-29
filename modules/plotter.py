@@ -8,18 +8,23 @@ Description: Functions for plotting
 
 import os, sys
 import numpy as np
+import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import matplotlib.ticker as mticker
 import colorsys
+import cmocean.cm as cmo
 from matplotlib.colors import LinearSegmentedColormap # Linear interpolation for color maps
 import matplotlib.patches as mpatches
+from matplotlib import cm, colors as clr
+from matplotlib.colorbar import Colorbar # different way to handle colorbar
 import matplotlib.animation as animation
 import pandas as pd
 import matplotlib.gridspec as gridspec
 import seaborn as sns
+import customcmaps as ccmaps
 
 def plot_terrain(ax, ext):
     fname = '/work/bkawzenuk_work/Maps/data/ETOPO1_Bed_c_gmt4.grd'
@@ -77,18 +82,14 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
     - Alpha sets transparency (0 is transparent, 1 is solid)
     
     """
+    ## some style dictionaries
+    kw_ticklabels = {'size': 10, 'color': 'dimgray', 'weight': 'light'}
+    kw_grid = {'linewidth': .5, 'color': 'k', 'linestyle': '--', 'alpha': 0.4}
+    kw_ticks = {'length': 4, 'width': 0.5, 'pad': 2, 'color': 'black',
+                         'labelsize': 10, 'labelcolor': 'dimgray'}
 
     # Use map projection (CRS) of the given Axes
     mapcrs = ax.projection    
-    
-    ## Map Extent
-    # If no extent is given, use global extent
-    if extent is None:        
-        ax.set_global()
-        extent = [-180., 180., -90., 90.]
-    # If extent is given, set map extent to lat/lon bounding box
-    else:
-        ax.set_extent(extent, crs=datacrs)
     
     # Add map features (continents and country borders)
     ax.add_feature(cfeature.LAND, facecolor='0.9')      
@@ -108,8 +109,7 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                       linewidth=.5, color='black', alpha=0.5, linestyle='--')
         
     else:
-        gl = ax.gridlines(crs=datacrs, draw_labels=True,
-                      linewidth=.5, color='black', alpha=0.5, linestyle='--')
+        gl = ax.gridlines(crs=datacrs, draw_labels=True, **kw_grid)
         gl.top_labels = False
         gl.left_labels = left_lats
         gl.right_labels = right_lats
@@ -118,8 +118,8 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         gl.ylocator = mticker.FixedLocator(yticks)
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
-        gl.xlabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
-        gl.ylabel_style = {'size': 10, 'color': 'gray', 'fontweight': 'light'}
+        gl.xlabel_style = kw_ticklabels
+        gl.ylabel_style = kw_ticklabels
     
     ## Gridlines
     # Draw gridlines if requested
@@ -131,12 +131,21 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         gl.ylines = False
             
 
-    # apply tick parameters    
-    ax.tick_params(direction='out', 
-                   labelsize=10, 
-                   length=4, 
-                   pad=2, 
-                   color='black')
+    # apply tick parameters
+    ax.set_xticks(xticks, crs=datacrs)
+    ax.set_yticks(yticks, crs=datacrs)
+    plt.yticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
+    plt.xticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
+    ax.ticklabel_format(axis='both', style='plain')
+
+    ## Map Extent
+    # If no extent is given, use global extent
+    if extent is None:        
+        ax.set_global()
+        extent = [-180., 180., -90., 90.]
+    # If extent is given, set map extent to lat/lon bounding box
+    else:
+        ax.set_extent(extent, crs=datacrs)
     
     return ax
 
@@ -549,3 +558,23 @@ class SeabornFig2Grid():
 
     def _resize(self, evt=None):
         self.sg.fig.set_size_inches(self.fig.get_size_inches())
+        
+def plot_arscale_cbar(cbax, orientation):
+    kw_ticklabels = {'size': 8, 'color': 'dimgray', 'weight': 'light'}
+    # create custom colorbar for arscale
+    upper = 5 # the upper limit for the colorbar
+    lower = 1 # the lower limit for the colorbar
+    N = 5 # the number of discrete intervals
+    deltac = (upper-lower)/(2*(N-1))
+    cmap, norm, cbar_tcks = ccmaps.cmap('arscale')
+    norm = clr.Normalize() # this alters the state of the Normalize object
+    arscale_cbar = cm.ScalarMappable(norm=norm, cmap=cmap)
+    arscale_cbar.set_array([lower-deltac,upper+deltac])
+    if orientation == 'horizontal':
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'horizontal', ticklocation = 'bottom', ticks=[1, 2, 3, 4, 5])
+        cb.set_label('AR Scale', fontsize=10)
+        cb.ax.set_xticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
+    else:
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'vertical', ticklocation = 'right', ticks=[1, 2, 3, 4, 5])
+        cb.set_label('AR Scale', fontsize=10)
+        cb.ax.set_yticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)

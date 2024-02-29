@@ -84,11 +84,39 @@ def find_closest_MERRA2_lon_df(row):
     
     return final
 
-def select_months_ds(ds, mon_s, mon_e):    
+def select_closest_value(myList, myNumber):
+    final = min(myList, key=lambda x:abs(x-myNumber))
+    idx  = min(range(len(myList)), key=lambda i: abs(myList[i]-myNumber))
+    
+    return (idx, final)
+
+def MERRA2_range(row):
+    ## MERRA2 longitudes are every 0.625 degree
+    merra2_lons = np.arange(-180.0, 180., 0.625)
+    merra2_lats = np.arange(-90.0, 90., 0.5)
+    
+    lat = row['latitude']
+    lon = row['longitude']
+    
+    idx, final = select_closest_value(merra2_lons, lon)
+    idx2, final2 = select_closest_value(merra2_lats, lat)
+    ## get surrounding grid cells
+    lon_lst = merra2_lons[idx-2:idx+3] 
+    lat_lst = merra2_lats[idx2-2:idx2+3]
+    
+    return lat_lst, lon_lst
+
+def select_months_ds(ds, mon_s, mon_e, time_varname):    
     # Select months from xarray dataset
     if mon_s > mon_e:
-        idx = (ds.start_date.dt.month >= mon_s) | (ds.start_date.dt.month <= mon_e)
+        idx = (ds[time_varname].dt.month >= mon_s) | (ds[time_varname].dt.month <= mon_e)
     else:
-        idx = (ds.start_date.dt.month >= mon_s) & (ds.start_date.dt.month <= mon_e)
-    ds = ds.sel(start_date=idx)
+        idx = (ds[time_varname].dt.month >= mon_s) & (ds[time_varname].dt.month <= mon_e)
+    
+    if time_varname == 'time':
+        ds = ds.sel(time=idx)
+    elif time_varname == 'start_date':
+        ds = ds.sel(start_date=idx)
+    elif time_varname == 'date':
+        ds = ds.sel(date=idx)
     return ds
