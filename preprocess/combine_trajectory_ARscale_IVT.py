@@ -18,7 +18,7 @@ import re
 sys.path.append('../modules')
 # Import my modules
 from utils import roundPartial, find_closest_MERRA2_lon
-from trajectory import combine_IVT_and_trajectory, combine_arscale_and_trajectory, combine_coastal_IVT_and_trajectory
+from trajectory import combine_IVT_and_trajectory, combine_arscale_and_trajectory
 
 path_to_data = '/data/projects/Comet/cwp140/' 
 path_to_out  = '../out/'       # output files (numerical results, intermediate datafiles) -- read & write
