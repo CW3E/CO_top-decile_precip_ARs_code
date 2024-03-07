@@ -35,13 +35,13 @@ class calculate_backward_trajectory:
     
     '''
     
-    def __init__(self, ds, event_date, start_lev=700.):
+    def __init__(self, ds, event_date, start_lev=700., start_time=12, lat_offset=0, lon_offset=0):
     
         ## get center_date, start_lat, and start_lon
         ## center in the middle of the day
-        self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(12,'h')
-        self.start_lat = ds.sel(date=event_date).lat.values
-        self.start_lon = ds.sel(date=event_date).lon.values
+        self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(start_time,'h')
+        self.start_lat = ds.sel(date=event_date).lat.values + lat_offset
+        self.start_lon = ds.sel(date=event_date).lon.values + lon_offset
         self.start_lev = start_lev
         print(self.center_date, self.start_lat, self.start_lon)
         
@@ -204,7 +204,7 @@ class calculate_backward_trajectory:
             if self.df.iloc[idx]['level'] < 1.:
                 break
             elif self.df.iloc[idx]['level'] > 1000.:
-                break
+                self.df.iloc[idx]['level'] = 1000.
         
         ## convert specific humidity to g kg-1
         self.df['q'] = self.df['q']* 1000
