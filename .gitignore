@@ -15,4 +15,8 @@
 modules/__pycache__/*
 ## ignore slurm_out files
 download/ERA5/slurm_out/*
+preprocess/sensitivity_test_trajectories/slurm_out/*
 preprocess/calculate_trajectories/slurm_out/*
+
+##ignore core files
+analysis/core*

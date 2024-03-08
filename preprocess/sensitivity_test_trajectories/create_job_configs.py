@@ -7,6 +7,7 @@
 
 import yaml
 from itertools import chain
+import itertools
 import xarray as xr
 import pandas as pd
 
@@ -22,42 +23,56 @@ HUC8_lst = [14050001, ## upper yampa
                11020001 ## Arkansas Headwaters
               ]
 
+## we want to test these dates
+date_lst = ['20030317', '20030318', '20030319', ## March 2003 Blizzard (>50 inches in Denver)
+            '20130910', '20130911', '20130912', ## Lyons Flooding
+            '20170109', '20170110', ## really strong chinook winds (iconic Sequoia tree cave-in in CA)
+            '20190313', '20190314' ## Bomb Cyclone Storm (same as Jerry's case study)
+           ]
+
+lev_lst = [800., 700., 600., 500.] # different heights to run through
+time_lst = [0, 6, 12, 18] ## different times of the day to initialize
+# using the centroid of the watershed, plus 0.25 degree in each direction
+grid_offset = ['center', #[0, 0], # center grid
+               'north', # [0.25, 0], # north grid
+               'south', # [-0.25, 0], # south grid
+               'east', # [0, 0.25], # east grid
+               'west', # S[0, -0.25] # west grid
+              ]
+
+
+a = [HUC8_lst, date_lst, lev_lst, time_lst, grid_offset]
+dict_lst = list(itertools.product(*a))
+
 jobcounter = 0
 filecounter = 0
 ## loop through to create dictionary for each job
 d_lst = []
 dest_lst = []
 njob_lst = []
-for i, HUC8_ID in enumerate(HUC8_lst):
-    tmp = ds.sel(HUC8=HUC8_ID)
-    tmp = tmp.where(tmp.extreme == 1, drop=True)
-    event_dates = tmp.date.values
+for i, dlist in enumerate(dict_lst):
+    jobcounter += 1
+    d = {'job_{0}'.format(jobcounter):
+         {'HUC8_ID': dlist[0],
+          'date': dlist[1],
+          'lev': dlist[2],
+          'hour': dlist[3],
+          'grid': dlist[4]}}
+    d_lst.append(d)
     
-    ### Loop through events for each HUC8 ###
-    for j, edate in enumerate(event_dates):
-        ts = pd.to_datetime(str(edate)) 
-        ed = ts.strftime('%Y%m%d')
-        print(HUC8_ID, ed)
-    
-        jobcounter += 1
-        d = {'job_{0}'.format(jobcounter):
-             {'HUC8_ID': HUC8_ID,
-              'date': ed}}
-        d_lst.append(d)
+    if (jobcounter == 999):
+        filecounter += 1
+        ## merge all the dictionaries to one
+        dest = dict(chain.from_iterable(map(dict.items, d_lst)))
+        njob_lst.append(len(d_lst))
+        ## write to .yaml file and close
+        file=open("config_{0}.yaml".format(str(filecounter)),"w")
+        yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
+        file.close()
         
-        if (jobcounter == 999):
-            filecounter += 1
-            ## merge all the dictionaries to one
-            dest = dict(chain.from_iterable(map(dict.items, d_lst)))
-            njob_lst.append(len(d_lst))
-            ## write to .yaml file and close
-            file=open("config_{0}.yaml".format(str(filecounter)),"w")
-            yaml.dump(dest,file, allow_unicode=True, default_flow_style=None)
-            file.close()
-            
-            ## reset jobcounter and d_lst
-            jobcounter = 0
-            d_lst = []
+        ## reset jobcounter and d_lst
+        jobcounter = 0
+        d_lst = []
         
 ## now save the final config
 filecounter += 1
@@ -74,7 +89,7 @@ file.close()
 for i, njobs in enumerate(njob_lst):
     call_str_lst = []
     for j, job in enumerate(range(1, njobs+1, 1)):
-        call_string = "python run_trajectories.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
+        call_string = "python run_sensitivity_test_trajectories.py config_{0}.yaml 'job_{1}'".format(i+1, j+1)
         call_str_lst.append(call_string)
         
     ## now write those lines to a text file
