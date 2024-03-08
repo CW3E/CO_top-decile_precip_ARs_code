@@ -16,13 +16,12 @@ from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_r
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
-def calculate_heatmaps_from_trajectories(HUC8_ID):
-    fname = '/home/dnash/comet_data/preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
-    ERA5 = xr.open_dataset(fname)
-    
+def calculate_heatmaps_from_trajectories(ds):
+
     ## open as geopandas dataframe
-    df = ERA5.to_dataframe()
-    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.longitude, df.latitude), crs="EPSG:4326")
+    df = ds.to_dataframe()
+    df = df.dropna(subset = ['ar_scale'])
+    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon, df.lat), crs="EPSG:4326")
 
     ### Code is based on https://james-brennan.github.io/posts/fast_gridding_geopandas/
 
