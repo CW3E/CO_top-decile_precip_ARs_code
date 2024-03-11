@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10GB
-#SBATCH -t 1:00:00 # Runtime in HH:MM:SS
+#SBATCH -t 5:00:00 # Runtime in HH:MM:SS
 #SBATCH -o slurm_out/output_%a # File to which STDOUT will be written
 #SBATCH -e slurm_out/output_err%a # File to which STDERR will be written
 #SBATCH --job-name=run_trajectories_sensitivity_tests
@@ -18,5 +18,5 @@
 source /home/${USER}/.bashrc
 source activate eaton-scripps-CO 
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_1.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_2.txt`
 eval $linevar
