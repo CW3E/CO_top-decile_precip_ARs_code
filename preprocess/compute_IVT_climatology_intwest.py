@@ -14,7 +14,9 @@ path_to_out  = '../out/'       # output files (numerical results, intermediate d
 path_to_figs = '../figs/'      # figures
 
 # subset ds to the select points from int-west transect
-df = pd.read_csv('../data/latlon_intwest.txt', header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
+loc_name = 'SNOTEL' ## SNOTEL, intwest
+df = pd.read_csv('../data/latlon_{0}.txt'.format(loc_name), header=None, sep=' ', names=['latitude', 'longitude'], engine='python')
+
 df['longitude'] = df['longitude']*-1
         
 x = xr.DataArray(df['longitude'], dims=['location'])
@@ -59,5 +61,5 @@ mean_IVT = final_ds.meanIVT.sum('time') / ntimes
 write_ds = xr.merge([max_IVT, mean_IVT])
 
 ## write to a netCDF
-out_fname = path_to_data + 'preprocessed/ERA5_IVT_clim_intwest.nc'
+out_fname = path_to_data + 'preprocessed/ERA5_IVT_clim_{0}.nc'.format(loc_name)
 write_ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
