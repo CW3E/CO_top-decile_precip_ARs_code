@@ -33,10 +33,10 @@ class calculate_backward_trajectory:
     
     '''
     
-    def __init__(self, ds, event_date, start_lev=700., start_time=12, lat_offset=0, lon_offset=0):
+    def __init__(self, ds, event_date, start_lev=700., start_time=0, lat_offset=0, lon_offset=0):
     
         ## get center_date, start_lat, and start_lon
-        ## center in the middle of the day
+        ## center the date based on what hour you want to run the trajectory
         self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(start_time,'h')
         self.start_lat = ds.sel(date=event_date).lat.values + lat_offset
         self.start_lon = ds.sel(date=event_date).lon.values + lon_offset
@@ -49,8 +49,8 @@ class calculate_backward_trajectory:
         self.date_lst = pd.date_range(end=self.center_date, periods=72, freq='H')
 
         ## create list of dates based on start date
-        start_date = ds.sel(date=event_date).date.values - np.timedelta64(3,'D')
-        end_date = ds.sel(date=event_date).date.values
+        self.start_date = ds.sel(date=event_date).date.values - np.timedelta64(3,'D')
+        self.end_date = ds.sel(date=event_date).date.values
         self.date_lst_era = pd.date_range(start_date, end_date, freq='1D')
 
     def preprocess(self, ds):
@@ -68,15 +68,19 @@ class calculate_backward_trajectory:
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/ERA5/ERA5/{0}/'.format(year)
             fname = "era5_nhemi_025dg_1hr_uvwq_{0}{1}{2}.nc".format(year, month, day)
-            fname_lst.append(path_to_data+fname)
-            # ds2 = xr.open_dataset(path_to_data+fname)
-            # ds_lst.append(ds2)
+            fname_lst.append(path_to_data+fname) # ERA5 pressure level data fname_lst
+            
+            path_to_data = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5/'
+            IVT_fname = path_to_data + 'ivt/{0}{1}_IVT.nc'.format(year, month)
+            zerodeg_fname = path_to_data + 'zero_degree_level/{0}__deg0l.nc'.format(year)
         
-        # concatenate ds_lst
-        # self.ds1 = xr.concat(ds_lst, dim='time')
-
         
         self.ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
+
+        ## Read ERA5 IVT data
+        ## read the file, then preprocess to same area and start and end dates
+
+        ## now combine with the other data into single dataset
 
         ## read MERRA2 data - not sure if we need this anymore
         # fname = '/data/downloaded/Reanalysis/MERRA2/M2I3NPASM.5.12.4_raw/1980/MERRA2_100.inst3_3d_asm_Np.19801231.nc4'
