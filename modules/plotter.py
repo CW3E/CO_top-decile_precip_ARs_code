@@ -578,3 +578,23 @@ def plot_arscale_cbar(cbax, orientation):
         cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'vertical', ticklocation = 'right', ticks=[1, 2, 3, 4, 5])
         cb.set_label('AR Scale', fontsize=10)
         cb.ax.set_yticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
+
+def plot_sensitivity_cbar(cbax, orientation):
+    kw_ticklabels = {'size': 8, 'color': 'dimgray', 'weight': 'light'}
+    # create custom colorbar for arscale
+    upper = 4 # the upper limit for the colorbar
+    lower = 1 # the lower limit for the colorbar
+    N = 4 # the number of discrete intervals
+    deltac = (upper-lower)/(2*(N-1))
+    cmap, norm, cbar_tcks = ccmaps.cmap('sens')
+    norm = clr.Normalize() # this alters the state of the Normalize object
+    arscale_cbar = cm.ScalarMappable(norm=norm, cmap=cmap)
+    arscale_cbar.set_array([lower-deltac,upper+deltac])
+    if orientation == 'horizontal':
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'horizontal', ticklocation = 'bottom', ticks=[1, 2, 3, 4])
+        cb.set_label('Year-Month-Day Hour', fontsize=10)
+        cb.ax.set_xticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
+    else:
+        cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'vertical', ticklocation = 'right', ticks=[1, 2, 3, 4])
+        cb.set_label('Year-Month-Day Hour', fontsize=10)
+        cb.ax.set_yticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
