@@ -74,18 +74,20 @@ class calculate_backward_trajectory:
             IVT_fname = path_to_data + 'ivt/{0}{1}_IVT.nc'.format(year, month)
             zerodeg_fname = path_to_data + 'zero_degree_level/{0}__deg0l.nc'.format(year)
         
-        
+            ## end
+            
         self.ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
 
         ## Read ERA5 IVT data
         ## read the file, then preprocess to same area and start and end dates
+        IVT = xr.open_dataset(IVT_fname)
+        IVT = IVT.sel(time=slice(self.start_date, self.end_date), latitude=slice(50., 15.), longitude=slice(-180., -80.))
 
-        ## now combine with the other data into single dataset
+        zerodeg = xr.open_dataset(zerodeg_fname)
+        zerodeg = zerodeg.sel(time=slice(self.start_date, self.end_date), latitude=slice(50., 15.), longitude=slice(-180., -80.))
 
-        ## read MERRA2 data - not sure if we need this anymore
-        # fname = '/data/downloaded/Reanalysis/MERRA2/M2I3NPASM.5.12.4_raw/1980/MERRA2_100.inst3_3d_asm_Np.19801231.nc4'
-        # calculate vertical velocity (w) if MERRA2
-        # w = mpcalc.vertical_velocity(ds.OMEGA, ds.lev, ds.T, mixing_ratio=0)
+
+        ## Merge pressure level files with IVT and freezing level
 
     def create_empty_array(self):   
    
