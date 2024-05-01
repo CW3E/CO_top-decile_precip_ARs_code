@@ -33,25 +33,25 @@ class calculate_backward_trajectory:
     
     '''
     
-    def __init__(self, ds, event_date, start_lev=700., start_time=0, lat_offset=0, lon_offset=0):
+    def __init__(self, ds, event_date, start_time=0, lat_offset=0, lon_offset=0):
     
         ## get center_date, start_lat, and start_lon
         ## center the date based on what hour you want to run the trajectory
         self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(start_time,'h')
         self.start_lat = ds.sel(date=event_date).lat.values + lat_offset
         self.start_lon = ds.sel(date=event_date).lon.values + lon_offset
-        self.start_lev = start_lev
+        self.start_lev = ds.sel(date=event_date).sp_start.values
         print(self.center_date, self.start_lat, self.start_lon)
         
-        self.varlst = ['time', 'latitude', 'longitude', 'level', 'q', 'u', 'v', 'w']     
+        self.varlst = ['time', 'latitude', 'longitude', 'level', 'q', 'u', 'v', 'w', 'IVT', 'deg0l']     
         self.calc_vars = ['drying_ratio', 'dq']
         
         self.date_lst = pd.date_range(end=self.center_date, periods=72, freq='H')
 
         ## create list of dates based on start date
-        self.start_date = ds.sel(date=event_date).date.values - np.timedelta64(3,'D')
+        self.start_date = ds.sel(date=event_date).date.values - np.timedelta64(2,'D')
         self.end_date = ds.sel(date=event_date).date.values
-        self.date_lst_era = pd.date_range(start_date, end_date, freq='1D')
+        self.date_lst_era = pd.date_range(self.start_date, self.end_date, freq='1D')
 
     def preprocess(self, ds):
         return ds.sel(latitude=slice(50., 15.), longitude=slice(-180., -80.))
@@ -72,22 +72,28 @@ class calculate_backward_trajectory:
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5/'
             IVT_fname = path_to_data + 'ivt/{0}{1}_IVT.nc'.format(year, month)
-            zerodeg_fname = path_to_data + 'zero_degree_level/{0}__deg0l.nc'.format(year)
+            zerodeg_fname = path_to_data + 'zero_degree_level/{0}_deg0l.nc'.format(year)
         
             ## end
             
-        self.ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
+        ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
+        ds1 = ds1.sel(time=slice(self.start_date, self.end_date))
 
         ## Read ERA5 IVT data
         ## read the file, then preprocess to same area and start and end dates
         IVT = xr.open_dataset(IVT_fname)
-        IVT = IVT.sel(time=slice(self.start_date, self.end_date), latitude=slice(50., 15.), longitude=slice(-180., -80.))
+        ## rename lat/lon to latitude/longitude
+        IVT = IVT.rename({'lon': 'longitude', 'lat': 'latitude'})
+        IVT = IVT.sel(time=slice(self.start_date, self.end_date))
 
         zerodeg = xr.open_dataset(zerodeg_fname)
-        zerodeg = zerodeg.sel(time=slice(self.start_date, self.end_date), latitude=slice(50., 15.), longitude=slice(-180., -80.))
+        zerodeg = zerodeg.assign_coords({"longitude": (((zerodeg.longitude + 180) % 360) - 180)}) # Convert DataArray longitude coordinates from 0-359 to -180-179
+
+        zerodeg = zerodeg.sel(time=slice(self.start_date, self.end_date))
 
 
         ## Merge pressure level files with IVT and freezing level
+        self.ds1 = xr.merge([ds1, IVT, zerodeg])
 
     def create_empty_array(self):   
    

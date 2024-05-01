@@ -20,3 +20,7 @@ preprocess/calculate_trajectories/slurm_out/*
 
 ##ignore core files
 analysis/core*
+
+*.yaml
+*.yml
+*.txt

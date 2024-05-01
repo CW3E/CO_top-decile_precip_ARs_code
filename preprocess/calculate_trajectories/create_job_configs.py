@@ -11,9 +11,10 @@ import xarray as xr
 import pandas as pd
 
 ## get list of HUC8 trajectories
-path_to_data = '/expanse/lustre/scratch/dnash/temp_project/'
-fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
+path_to_data = '/expanse/nfs/cw3e/cwp140/'
+fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
+ds = ds.sel(date=slice('2000-01-03', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
 
 HUC8_lst = ds.HUC8.values
 
@@ -26,6 +27,7 @@ njob_lst = []
 for i, HUC8_ID in enumerate(HUC8_lst):
     tmp = ds.sel(HUC8=HUC8_ID)
     # tmp = tmp.where(tmp.extreme == 1, drop=True)
+    
     tmp = tmp.where(tmp.prec >= 2.54, drop=True) # run trajectories for all days where precip is greater than 0.1 inch
     event_dates = tmp.date.values
     
