@@ -27,8 +27,8 @@ path_to_figs = '../figs/'      # figures
 
 ## load Rutz AR
 print('Loading Rutz AR data')
-fname = path_to_data + 'preprocessed/MERRA2/MERRA2_Rutz_US-West.nc'
-ar = xr.open_dataset(fname)
+fname_pattern = path_to_data + 'preprocessed/MERRA2/MERRA2_Rutz_latlon_*.nc'
+ar = xr.open_mfdataset(fname_pattern)
 
 ## load AR scale
 print('Loading ERA5 AR scale')
@@ -41,15 +41,16 @@ tARgetv4 = xr.open_dataset(fname)
 
 ## load HUC8 IDs
 print('Loading HUC8 IDs')
-fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
+fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
 HUC8_IDs = ds.HUC8.values ## get list of HUC8 IDs
+HUC8_IDs = ['14050001']
 
 ## loop through all HUC8s
 for i, HUC8_ID in enumerate(HUC8_IDs):
     print(i, HUC8_ID)
     ## load watershed trajectories
-    fname = path_to_data + 'preprocessed/ERA5_trajectories/final/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    fname = path_to_data + 'preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     ERA5 = xr.open_dataset(fname)
     ERA5 = ERA5.assign_coords({"lon": ERA5.longitude, "lat": ERA5.latitude, "time": ERA5.time})
     ERA5 = ERA5.drop_vars(["latitude", "longitude"])
