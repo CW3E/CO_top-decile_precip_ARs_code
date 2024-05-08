@@ -53,7 +53,7 @@ def list_of_processed_files(year):
     Returns a list of ERA5 files that have been downloaded
     '''
     processed_dates = []
-    list_of_files = glob.glob('/expanse/lustre/scratch/dnash/temp_project/downloaded/ERA5/*/*')
+    list_of_files = glob.glob('/expanse/nfs/cw3e/cwp140/downloads/ERA5/ERA5/*/*')
     for fname in list_of_files:
 
         # pull the initialization date from the filename

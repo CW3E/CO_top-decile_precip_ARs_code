@@ -17,12 +17,12 @@ sys.path.append('../../modules')
 from utils import list_of_processed_files
 
 ## create list of month/year/day
-date_lst = pd.date_range('2020-01-01', '2023-12-31', freq='1D')
+date_lst = pd.date_range('2000-01-01', '2023-12-31', freq='1D')
 
-# ## keep only rows where we haven't preprocessed the dates yet
-# processed_dates = list_of_processed_files(2000)
-# idx = ~date_lst.isin(processed_dates)
-# date_lst = date_lst[idx]
+## keep only rows where we haven't preprocessed the dates yet
+processed_dates = list_of_processed_files(2000)
+idx = ~date_lst.isin(processed_dates)
+date_lst = date_lst[idx]
 
 jobcounter = 0
 filecounter = 0

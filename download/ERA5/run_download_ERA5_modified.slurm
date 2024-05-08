@@ -16,9 +16,9 @@
 source /home/${USER}/.bashrc
 source activate cds 
  
-outer=874      # set outer loop counter
-start_job='874'
-end_job='999'
+outer=1      # set outer loop counter
+start_job='1'
+end_job='41'
 # Loop to extract single variable from netCDF files, then concatenate into yearly files
 # Begin outer loop (e.g. each job)
 for jobID in $(seq $start_job $end_job)

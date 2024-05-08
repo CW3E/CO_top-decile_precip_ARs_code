@@ -17,7 +17,7 @@ source /home/dnash/miniconda3/etc/profile.d/conda.sh
 # names of configuration dictionaries to loop through
 array=(
 sfc_z
-prs_z
+# prs_z
 )
 
 # now loop through each configuration dictionary to download the ERA5 data
