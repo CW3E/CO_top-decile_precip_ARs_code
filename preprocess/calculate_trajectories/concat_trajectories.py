@@ -14,10 +14,11 @@ server='expanse'
 if server == 'comet':
     path_to_data = '/data/projects/Comet/cwp140/'
 elif server == 'expanse':
-    path_to_data = '/expanse/lustre/scratch/dnash/temp_project/'
+    path_to_data = '/expanse/nfs/cw3e/cwp140/'
 
-fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
+fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
+ds = ds.sel(date=slice('2000-01-04', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
 
 ## get list of HUC8 IDs
 HUC8_IDs = ds.HUC8.values
@@ -26,7 +27,8 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
     print('Processing HUC8 {0}'.format(HUC8_ID))
     # get list of event dates from first HUC8
     tmp = ds.sel(HUC8=HUC8_ID)
-    tmp = tmp.where(tmp.extreme == 1, drop=True)
+    # tmp = tmp.where(tmp.extreme == 1, drop=True)
+    tmp = tmp.where(tmp.prec >= 2.54, drop=True) # run trajectories for all days where precip is greater than 0.1 inch
     event_dates = tmp.date.values
     nevents = len(event_dates)
     
@@ -36,7 +38,7 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
     for j, dt in enumerate(event_dates):
         ts = pd.to_datetime(str(dt)) 
         d = ts.strftime("%Y%m%d")
-        fname = path_to_data + 'preprocessed/ERA5_trajectories/PRISM_HUC8_{0}_{1}.nc'.format(HUC8_ID, d)
+        fname = path_to_data + 'preprocessed/ERA5_trajectories_uncombined/PRISM_HUC8_{0}_{1}.nc'.format(HUC8_ID, d)
         fname_lst.append(fname)
 
 

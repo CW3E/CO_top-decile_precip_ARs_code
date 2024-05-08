@@ -20,7 +20,7 @@ sys.path.append('../modules')
 from utils import roundPartial, find_closest_MERRA2_lon
 from trajectory import combine_IVT_and_trajectory, combine_arscale_and_trajectory
 
-path_to_data = '/data/projects/Comet/cwp140/' 
+path_to_data = '/expanse/nfs/cw3e/cwp140/'
 path_to_out  = '../out/'       # output files (numerical results, intermediate datafiles) -- read & write
 path_to_figs = '../figs/'      # figures
 
@@ -31,9 +31,13 @@ fname = path_to_data + 'preprocessed/MERRA2/MERRA2_Rutz_US-West.nc'
 ar = xr.open_dataset(fname)
 
 ## load AR scale
-print('Loading MERRA2 scale')
-fname = path_to_data + 'preprocessed/MERRA2/MERRA2_ARScale_US-West.nc'
-arscale = xr.open_dataset(fname)
+print('Loading ERA5 AR scale')
+fname_pattern = path_to_data + 'preprocessed/ARScale_ERA5/ERA5_ARScale_*.nc'
+arscale = xr.open_mfdataset(fname_pattern)
+
+## Load tARgetv4 AR data
+fname = path_to_data + 'preprocessed/tARgetv4/globalARcatalog_ERA5_2000-2023_v4.0.nc'
+tARgetv4 = xr.open_dataset(fname)
 
 ## load HUC8 IDs
 print('Loading HUC8 IDs')
@@ -47,24 +51,22 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
     ## load watershed trajectories
     fname = path_to_data + 'preprocessed/ERA5_trajectories/final/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     ERA5 = xr.open_dataset(fname)
-    # ERA5 = ERA5.assign_coords({"lon": ERA5.longitude, "lat": ERA5.latitude, "time": ERA5.time})
-    # ERA5 = ERA5.drop_vars(["latitude", "longitude"])
+    ERA5 = ERA5.assign_coords({"lon": ERA5.longitude, "lat": ERA5.latitude, "time": ERA5.time})
+    ERA5 = ERA5.drop_vars(["latitude", "longitude"])
 
     ds_lst = []
     ## loop through all trajectories for that watershed
     for i, st_date in enumerate(ERA5.start_date.values):
         tmp = ERA5.sel(start_date=st_date)
-        # ## combine IVT data   
-        # tmp = combine_IVT_and_trajectory(tmp)
         
         # ## add arscale, Rutz AR, and coastal IVT
         print('Combining AR Scale ... {0}'.format(i))
-        tmp = combine_arscale_and_trajectory(tmp, arscale, ar)
+        tmp = combine_arscale_and_trajectory(tmp, arscale, ar, tARgetv4)
 
         ds_lst.append(tmp)
 
     ## merge final dataset
     final_ds = xr.concat(ds_lst, dim="start_date")
 
-    out_fname = '/home/dnash/comet_data/preprocessed/ERA5_trajectories/latest/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    out_fname = path_to_data + 'preprocessed/ERA5_trajectories/combined/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     final_ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
