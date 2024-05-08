@@ -49,7 +49,7 @@ class calculate_backward_trajectory:
         self.date_lst = pd.date_range(end=self.center_date, periods=72, freq='H')
 
         ## create list of dates based on start date
-        self.start_date = ds.sel(date=event_date).date.values - np.timedelta64(2,'D')
+        self.start_date = ds.sel(date=event_date).date.values - np.timedelta64(3,'D')
         self.end_date = ds.sel(date=event_date).date.values
         self.date_lst_era = pd.date_range(self.start_date, self.end_date, freq='1D')
 

@@ -14,7 +14,7 @@ import pandas as pd
 path_to_data = '/expanse/nfs/cw3e/cwp140/'
 fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
-ds = ds.sel(date=slice('2000-01-03', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
+ds = ds.sel(date=slice('2000-01-04', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
 
 HUC8_lst = ds.HUC8.values
 
