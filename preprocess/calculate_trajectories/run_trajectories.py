@@ -41,5 +41,5 @@ new_ds = df.to_xarray()
 
 ## save trajectory data to netCDF file
 print('Writing {0} {1} to netCDF ....'.format(HUC8_ID, event_date))
-out_fname = path_to_data + 'preprocessed/ERA5_trajectories_uncombined/PRISM_HUC8_{0}_{1}.nc'.format(HUC8_ID, event_date) 
+out_fname = path_to_data + 'preprocessed/ERA5_trajectories_extreme/PRISM_HUC8_{0}_{1}.nc'.format(HUC8_ID, event_date) 
 new_ds.load().to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
