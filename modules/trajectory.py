@@ -326,7 +326,7 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
         sta = time_match - np.timedelta64(12,'h')
         sto = time_match + np.timedelta64(12,'h')
 
-        flex_deg = 0.5 # the degrees of flexibility
+        flex_deg = 1.0 # the degrees of flexibility
 
         ## Gather AR Scale value
         tmp = arscale.sel(lat=slice(idx_lat-flex_deg, idx_lat+flex_deg), lon=slice(idx_lon-flex_deg, idx_lon+flex_deg), time=slice(sta, sto))
@@ -342,10 +342,13 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
         ## Gather Rutz AR and tARgetv4 value
         try:
             tmp1 = ar.sel(lat=slice(idx_lat-flex_deg, idx_lat+flex_deg), lon=slice(idx_lon-flex_deg, idx_lon+flex_deg), time=slice(sta, sto))
-            ar_val = tmp1.AR.values.max()
+            print(tmp1.AR.shape)
+            ar_val = np.nanmax(tmp1.AR.values)
 
-            tmp2 = tARgetv4.sel(lat=slice(idx_lat-flex_deg, idx_lat+flex_deg), lon=slice(idx_lon-flex_deg, idx_lon+flex_deg), time=slice(sta, sto))
-            tARget_val = tmp2.kidmap.values.max()
+            tmp2 = tARgetv4.sel(lat=slice(idx_lat+flex_deg, idx_lat-flex_deg), lon=slice(idx_lon-flex_deg, idx_lon+flex_deg), time=slice(sta, sto))
+            print(tmp2.kidmap.shape)
+            tARget_val = np.nanmax(tmp2.kidmap.values)
+            
         except ValueError:
             ar_val = np.nan
             tARget_val = np.nan

@@ -12,11 +12,11 @@
 #SBATCH --job-name=run_trajectories
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=1-999%100 # runs jobs x-y, 100 at a time
+#SBATCH --array=419-653%100 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc
 source activate eaton-scripps-CO 
  
-linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_4.txt`
+linevar=`sed $SLURM_ARRAY_TASK_ID'q;d' calls_5.txt`
 eval $linevar

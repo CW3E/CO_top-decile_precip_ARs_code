@@ -22,6 +22,8 @@ ds = ds.sel(date=slice('2000-01-04', '2023-12-31')) ## have to remove Jan 1 and 
 
 ## get list of HUC8 IDs
 HUC8_IDs = ds.HUC8.values
+HUC8_IDs = ['14050001']
+
 ## loop through all HUC8s
 for i, HUC8_ID in enumerate(HUC8_IDs):
     print('Processing HUC8 {0}'.format(HUC8_ID))
