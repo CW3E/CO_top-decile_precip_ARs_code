@@ -4,11 +4,13 @@ Author:      Deanna Nash, dnash@ucsd.edu
 Description: class for calculating backwards trajectories with u, v, and w data
 """
 
+import os
 import math
 import xarray as xr
 import pandas as pd
 import numpy as np
 import dask
+import shutil
 from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_range, roundPartial
 
 
@@ -65,15 +67,27 @@ class calculate_backward_trajectory:
             year = date.year
             month = date.strftime("%m")
             day = date.strftime("%d")
+
+            ## copy files to /dev/shm/${SLURM_JOB_ID}
+            job_ID = os.environ["SLURM_JOB_ID"]
+            self.scratch_path = '/dev/shm/{0}/'.format(int(job_ID))
+            os.makedirs(os.path.dirname(self.scratch_path), exist_ok=True)
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/ERA5/ERA5/{0}/'.format(year)
             fname = "era5_nhemi_025dg_1hr_uvwq_{0}{1}{2}.nc".format(year, month, day)
-            fname_lst.append(path_to_data+fname) # ERA5 pressure level data fname_lst
+            shutil.copy(path_to_data+fname, self.scratch_path+fname) # copy file over to data folder
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5/'
-            IVT_fname = path_to_data + 'ivt/{0}{1}_IVT.nc'.format(year, month)
-            zerodeg_fname = path_to_data + 'zero_degree_level/{0}_deg0l.nc'.format(year)
-        
+            IVT_fname = '{0}{1}_IVT.nc'.format(year, month)
+            zerodeg_fname = '{0}_deg0l.nc'.format(year)
+            shutil.copy(path_to_data+'ivt/'+IVT_fname, self.scratch_path+IVT_fname) # copy file over to data folder
+            shutil.copy(path_to_data+'zero_degree_level/'+zerodeg_fname, self.scratch_path+zerodeg_fname) # copy file over to data folder
+
+            ## create list of fnames
+            fname_lst.append(self.scratch_path+fname) # ERA5 pressure level data fname_lst
+            IVT_fname = self.scratch_path + IVT_fname
+            zerodeg_fname = self.scratch_path + zerodeg_fname
+            
             ## end
             
         ds1 = xr.open_mfdataset(fname_lst, engine='netcdf4', combine='by_coords')
@@ -222,7 +236,11 @@ class calculate_backward_trajectory:
         self.df['dq'] = self.df['q'].diff()
         ## using del_q, calculate "drying ratio"
         ## how much water vapor has been lost/gained in between time steps
-        self.df['drying_ratio'] = (self.df['dq']/self.df['q'])*100.# convert to %    
+        self.df['drying_ratio'] = (self.df['dq']/self.df['q'])*100.# convert to %
+
+
+        ## remove temporary files in /dev/shm/job_ID
+        shutil.rmtree(self.scratch_path)
         
         return self.df
     
