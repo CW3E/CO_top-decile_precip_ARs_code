@@ -16,7 +16,7 @@ from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_r
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
-def calculate_heatmaps_from_trajectories(ds):
+def calculate_heatmaps_from_trajectories(ds, normalize=True):
 
     ## open as geopandas dataframe
     df = ds.to_dataframe()
@@ -27,11 +27,14 @@ def calculate_heatmaps_from_trajectories(ds):
 
     ### BUILD A GRID 
     # total area for the grid
-    xmin, ymin, xmax, ymax= gdf.total_bounds
-    xmin, ymin, xmax, ymax= [-175., 20., -85.,  63.]
-    # how many cells across and down
-    n_cells=100
-    cell_size = (xmax-xmin)/n_cells
+    # xmin, ymin, xmax, ymax= gdf.total_bounds
+    ## Set up the grid to match ERA5 spacing
+    xmin, ymin, xmax, ymax= [-175., 15., -85.,  63.]
+    # how many cells across
+    cell_size = 0.5 ## quarter degree cell size
+    # ncells_x = (xmax-xmin)/cell_size
+    # ncells_y = (ymax-ymin)/cell_size
+    
     # projection of the grid
     crs = "EPSG:4326"
     # create the cells in a loop
@@ -53,6 +56,15 @@ def calculate_heatmaps_from_trajectories(ds):
     dissolve = merged.dissolve(by="index_right", aggfunc="count")
     # put this into cell
     cell.loc[dissolve.index, 'n_traj'] = dissolve.n_traj.values
-    print(cell['n_traj'].max())
-    
+
+    ## normalize cell using min-max method
+    max = cell['n_traj'].max()
+    min = cell['n_traj'].min()
+    denom = max-min
+
+    if normalize == True:
+        cell['n_traj'] = (cell['n_traj'] - min)/denom
+    else:
+        cell['n_traj'] = cell['n_traj']
+        
     return cell

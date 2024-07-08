@@ -16,7 +16,8 @@ fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
 ds = ds.sel(date=slice('2000-01-04', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
 
-HUC8_lst = ds.HUC8.values
+# HUC8_lst = ds.HUC8.values
+HUC8_lst = ['14080101', '14010001']
 
 jobcounter = 0
 filecounter = 0
@@ -26,9 +27,9 @@ dest_lst = []
 njob_lst = []
 for i, HUC8_ID in enumerate(HUC8_lst):
     tmp = ds.sel(HUC8=HUC8_ID)
-    tmp = tmp.where(tmp.extreme == 1, drop=True)
+    # tmp = tmp.where(tmp.extreme == 1, drop=True)
     
-    # tmp = tmp.where(tmp.prec >= 2.54, drop=True) # run trajectories for all days where precip is greater than 0.1 inch
+    tmp = tmp.where(tmp.prec >= 2.54, drop=True) # run trajectories for all days where precip is greater than 0.1 inch
     event_dates = tmp.date.values
     
     ### Loop through events for each HUC8 ###

@@ -27,7 +27,7 @@ import seaborn as sns
 import customcmaps as ccmaps
 
 def plot_terrain(ax, ext):
-    fname = '/work/bkawzenuk_work/Maps/data/ETOPO1_Bed_c_gmt4.grd'
+    fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
     datacrs = ccrs.PlateCarree()
     grid = xr.open_dataset(fname)
     grid = grid.where(grid.z > 0) # mask below sea level

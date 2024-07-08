@@ -70,12 +70,15 @@ class calculate_backward_trajectory:
 
             ## copy files to /dev/shm/${SLURM_JOB_ID}
             job_ID = os.environ["SLURM_JOB_ID"]
-            self.scratch_path = '/dev/shm/{0}/'.format(int(job_ID))
+            # self.scratch_path = '/dev/shm/{0}/'.format(int(job_ID))
+            self.scratch_path = '/expanse/lustre/scratch/dnash/temp_project/trajs/{0}/'.format(int(job_ID))
+            
             os.makedirs(os.path.dirname(self.scratch_path), exist_ok=True)
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/ERA5/ERA5/{0}/'.format(year)
             fname = "era5_nhemi_025dg_1hr_uvwq_{0}{1}{2}.nc".format(year, month, day)
             shutil.copy(path_to_data+fname, self.scratch_path+fname) # copy file over to data folder
+            fname_lst.append(path_to_data+fname) # ERA5 pressure level data fname_lst
             
             path_to_data = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5/'
             IVT_fname = '{0}{1}_IVT.nc'.format(year, month)
@@ -87,6 +90,8 @@ class calculate_backward_trajectory:
             fname_lst.append(self.scratch_path+fname) # ERA5 pressure level data fname_lst
             IVT_fname = self.scratch_path + IVT_fname
             zerodeg_fname = self.scratch_path + zerodeg_fname
+            # IVT_fname = path_to_data+'ivt/'+IVT_fname
+            # zerodeg_fname = path_to_data+'zero_degree_level/'+zerodeg_fname
             
             ## end
             
@@ -240,6 +245,7 @@ class calculate_backward_trajectory:
 
 
         ## remove temporary files in /dev/shm/job_ID
+        print('removing tmp files...')
         shutil.rmtree(self.scratch_path)
         
         return self.df
