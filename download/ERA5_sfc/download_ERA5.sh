@@ -16,7 +16,7 @@ source /home/dnash/miniconda3/etc/profile.d/conda.sh
 
 # names of configuration dictionaries to loop through
 array=(
-sfc_z
+ivt
 # prs_z
 )
 
