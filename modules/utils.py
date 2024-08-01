@@ -120,3 +120,27 @@ def select_months_ds(ds, mon_s, mon_e, time_varname):
     elif time_varname == 'date':
         ds = ds.sel(date=idx)
     return ds
+
+def generate_ptlst_from_start_end(x1, y1, x2, y2, pairs=True):
+    deltay = (y2-y1)
+    deltax = (x2-x1)
+
+    rise = deltay
+    run = deltax
+
+    small = min([np.abs(rise), np.abs(run)]) # get the smaller of the two numbers
+    divisor = small / 0.25 ## get our divisor to ensure we are getting a point every 0.25 degree in at least one direction
+
+    lat_pairs = np.arange(y1, y2+(rise/divisor), rise/divisor)
+    lon_pairs = np.arange(x1, x2+(run/divisor), run/divisor)
+
+    if pairs==True:
+        pair_lst = []
+        for i, pair in enumerate(zip(lat_pairs, lon_pairs)):
+            pair_lst.append(pair)
+        coord_pairs = pair_lst
+        
+    else:
+        coord_pairs = lat_pairs, lon_pairs
+    
+    return coord_pairs
