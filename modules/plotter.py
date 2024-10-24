@@ -18,6 +18,7 @@ import colorsys
 import cmocean.cm as cmo
 from matplotlib.colors import LinearSegmentedColormap # Linear interpolation for color maps
 import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
 from matplotlib import cm, colors as clr
 from matplotlib.colorbar import Colorbar # different way to handle colorbar
 import matplotlib.animation as animation
@@ -26,16 +27,35 @@ import matplotlib.gridspec as gridspec
 import seaborn as sns
 import customcmaps as ccmaps
 
-def plot_terrain(ax, ext):
+def terrain_cmap(vmax=3000):
+    # make a colormap that has land and ocean clearly delineated and of the
+    # same length (256 + 256)
+    colors_undersea = plt.cm.terrain(np.linspace(0, 0.17, 256))
+    colors_land = plt.cm.terrain(np.linspace(0.25, 1, 256))
+    all_colors = np.vstack((colors_undersea, colors_land))
+    terrain_map = mcolors.LinearSegmentedColormap.from_list(
+        'terrain_map', all_colors)
+    # make the norm:  Note the center is offset so that the land has more
+    # dynamic range:
+    divnorm = mcolors.TwoSlopeNorm(vmin=-0.25, vcenter=1, vmax=vmax)
+
+    return terrain_map, divnorm
+
+def plot_terrain(ax, ext, vmax, greyscale=True):
     fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
     datacrs = ccrs.PlateCarree()
     grid = xr.open_dataset(fname)
     grid = grid.where(grid.z > 0) # mask below sea level
     grid = grid.sel(x=slice(ext[0], ext[1]), y=slice(ext[2], ext[3]))
-    cs = ax.pcolormesh(grid.x, grid.y, grid.z,
-                        cmap=cmo.gray_r, transform=datacrs, alpha=0.7)
+    if greyscale == True:
+        cs = ax.pcolormesh(grid.x, grid.y, grid.z,
+                            cmap=cmo.gray_r, transform=datacrs, alpha=0.7)
+    else:
+        terrain_map, divnorm = terrain_cmap(vmax)
+        cs = ax.pcolormesh(grid.x, grid.y, grid.z, rasterized=True, norm=divnorm,
+                            cmap=terrain_map, shading='auto', transform=datacrs, alpha=0.6)
     
-    return ax
+    return ax, cs
 
 def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, yticks=None, grid=False, left_lats=True, right_lats=False, bottom_lons=True, mask_ocean=False, coastline=True):
     """

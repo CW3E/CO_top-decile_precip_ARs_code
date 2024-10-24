@@ -19,8 +19,10 @@ choropleth_map_portrait
 time_series_extreme
 ARScale_basin_WY
 heatmaps_basin_WY
-## horizontal composites
-## vertical composites
+NDJFMA_composite_trajectory
+MJJASO_composite_trajectory
+NDJFMA_anomaly_composite_trajectory
+MJJASO_anomaly_composite_trajectory
 ## schematic
 )
 
@@ -32,6 +34,10 @@ array2=(
 4
 5
 6
+7
+8
+9
+10
 )
 
 

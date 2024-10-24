@@ -21,30 +21,19 @@ sys.path.append('../../../modules')
 # Import my modules
 from utils import generate_ptlst_from_start_end
 
-region = 'baja' ## 'san_juan' 'baja' 'gulf_of_mexico'
-
+## get year and month information from slurm input
 config_file = str(sys.argv[1]) # this is the config file name
 job_info = str(sys.argv[2]) # this is the job name
-
 config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
 ddict = config[job_info] # pull the job info from the dict
-
 year = ddict['year']
 month = ddict['month']
 
-## create bounding boxes for regions
-d = {'baja': {'ext': [-115., -110., 27., 32.],
-              'start_pt': [33.0, -118.],
-              'end_pt': [29.0, -110.]},
-     
-     'san_juan': {'ext': [-109., -105., 37., 39.],
-              'start_pt': [38.0, -112.],
-              'end_pt': [38.0, -102.]},
-
-     'gulf_of_mexico': {'ext': [-99., -93., 25., 31.],
-              'start_pt': [28.0, -100.],
-              'end_pt': [31.0, -93.]}
-    }
+## load domain configuration file for extents
+region = 'gulf_of_mexico2' ## 'san_juan' 'baja' 'gulf_of_mexico'
+# import configuration file for case study choice
+yaml_doc = '../../../data/domains.yml'
+d = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
 
 coord_pairs = generate_ptlst_from_start_end(d[region]['start_pt'][1], d[region]['start_pt'][0], d[region]['end_pt'][1], d[region]['end_pt'][0], pairs=False)
 

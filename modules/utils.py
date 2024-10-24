@@ -121,18 +121,32 @@ def select_months_ds(ds, mon_s, mon_e, time_varname):
         ds = ds.sel(date=idx)
     return ds
 
+def select_months_df(df, mon_s, mon_e):
+    # Select months from pandas dataframe
+    if mon_s > mon_e:
+        idx = (df.index.month >= mon_s) | (df.index.month <= mon_e)
+    else:
+        idx = (df.index.month >= mon_s) & (df.index.month <= mon_e)
+
+    df = df.loc[idx]
+    
+    return df 
+    
 def generate_ptlst_from_start_end(x1, y1, x2, y2, pairs=True):
     deltay = (y2-y1)
     deltax = (x2-x1)
-
     rise = deltay
     run = deltax
 
-    small = min([np.abs(rise), np.abs(run)]) # get the smaller of the two numbers
-    divisor = small / 0.25 ## get our divisor to ensure we are getting a point every 0.25 degree in at least one direction
-
-    lat_pairs = np.arange(y1, y2+(rise/divisor), rise/divisor)
-    lon_pairs = np.arange(x1, x2+(run/divisor), run/divisor)
+    if rise == 0: ## if the line is horizontal straight
+        ## ensure we are getting a point every 0.25 degrees
+        lon_pairs = np.arange(x1, x2+0.25, 0.25)
+        lat_pairs = np.repeat(y1, len(lon_pairs))
+    else:
+        small = min([np.abs(rise), np.abs(run)]) # get the smaller of the two numbers
+        divisor = small / 0.25 ## get our divisor to ensure we are getting a point every 0.25 degree in at least one direction
+        lat_pairs = np.arange(y1, y2+(rise/divisor), rise/divisor)
+        lon_pairs = np.arange(x1, x2+(run/divisor), run/divisor)
 
     if pairs==True:
         pair_lst = []

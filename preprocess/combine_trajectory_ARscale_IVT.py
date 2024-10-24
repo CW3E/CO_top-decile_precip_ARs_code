@@ -46,7 +46,8 @@ ds = xr.open_dataset(fname)
 HUC8_IDs = ds.HUC8.values ## get list of HUC8 IDs
 # HUC8_IDs = ['14050001'] ## Upper Yampa
 # HUC8_IDs = ['14010001', '14080101', '14050001'] ## Colorado Headwaters and Upper San Juan
-HUC8_IDs = ['14020001'] ## East-Taylor
+# HUC8_IDs = ['14020001'] ## East-Taylor
+HUC8_IDs = ['14010002'] ## Blue
 
 ## loop through all HUC8s
 for i, HUC8_ID in enumerate(HUC8_IDs):

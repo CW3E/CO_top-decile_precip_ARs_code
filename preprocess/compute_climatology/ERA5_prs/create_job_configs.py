@@ -11,7 +11,7 @@ import xarray as xr
 import pandas as pd
 
 ## get list of HUC8 trajectories
-date_lst = pd.date_range('2000-03-01', '2023-12-31', freq='1M')
+date_lst = pd.date_range('2000-01-01', '2023-12-31', freq='1Y')
 
 jobcounter = 0
 filecounter = 0

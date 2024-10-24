@@ -12,7 +12,7 @@
 #SBATCH --job-name=resample_era5_daily
 #SBATCH --mail-type=ALL # Type of email notification- BEGIN,END,FAIL,ALL
 #SBATCH --mail-user=dnash@ucsd.edu # Email to which notifications will be sent
-#SBATCH --array=43-286%50 # runs jobs x-y, 100 at a time
+#SBATCH --array=1-288%50 # runs jobs x-y, 100 at a time
 
 # Activate Anaconda work environment
 source /home/${USER}/.bashrc

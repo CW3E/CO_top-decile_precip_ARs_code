@@ -16,8 +16,11 @@ source /home/dnash/miniconda3/etc/profile.d/conda.sh
 
 # names of configuration dictionaries to loop through
 array=(
-ivt
+# ivt
 # prs_z
+prs_z_201309_case
+prs_z_201701_case
+prs_z_201903_case
 )
 
 # now loop through each configuration dictionary to download the ERA5 data

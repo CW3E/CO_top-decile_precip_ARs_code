@@ -17,7 +17,7 @@ from harmonics import harmonic
 # Variables to Update #
 #######################
 
-region='baja'
+region='gulf_of_mexico2'
 
 ### Constants ###
 outdir = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5/cross_section/'
@@ -32,6 +32,11 @@ ds = xr.open_mfdataset(filename_pattern,
                        combine='by_coords')
 
 print('ds size in GB {:0.2f}\n'.format(ds.nbytes / 1e9))
+
+## add wvflux data to dataset
+qu = ds.q*ds.u
+qv = ds.q*ds.v
+ds = ds.assign(wvflux=np.sqrt(qu**2 + qv**2))
 
 
 ## calculate annual climatology

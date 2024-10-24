@@ -32,4 +32,46 @@ prs_z:
     datadir: '/expanse/nfs/cw3e/cwp140/downloads/ERA5/gph/6hr/'
     fprefix: 'era5_namerica_025dg_6hr_700z'
 
+
+prs_z_201309_case:
+    data_type: 'reanalysis-era5-pressure-levels'
+    levels: ['500', '600', '700', '800']
+    var_name: ['geopotential']
+    start_yr: 2013
+    end_yr: 2013
+    month: ['09']
+    day: ['10','11','12']
+    time: ['00:00','06:00','12:00','18:00']
+    area: [60, -170., 10., -70.] # [N,W,S,E] Default: global
+    grid: [0.25, 0.25]
+    datadir: '/expanse/nfs/cw3e/cwp140/downloads/ERA5/'
+    fprefix: '201309_z_prs.nc'
+
+prs_z_201701_case:
+    data_type: 'reanalysis-era5-pressure-levels'
+    levels: ['500', '600', '700', '800']
+    var_name: ['geopotential']
+    start_yr: 2017
+    end_yr: 2017
+    month: ['01']
+    day: ['09', '10']
+    time: ['00:00','06:00','12:00','18:00']
+    area: [60, -170., 10., -70.] # [N,W,S,E] Default: global
+    grid: [0.25, 0.25]
+    datadir: '/expanse/nfs/cw3e/cwp140/downloads/ERA5/'
+    fprefix: '201701_z_prs.nc'
+
+prs_z_201903_case:
+    data_type: 'reanalysis-era5-pressure-levels'
+    levels: ['500', '600', '700', '800']
+    var_name: ['geopotential']
+    start_yr: 2019
+    end_yr: 2019
+    month: ['03']
+    day: ['13', '14']
+    time: ['00:00','06:00','12:00','18:00']
+    area: [60, -170., 10., -70.] # [N,W,S,E] Default: global
+    grid: [0.25, 0.25]
+    datadir: '/expanse/nfs/cw3e/cwp140/downloads/ERA5/'
+    fprefix: '201903_z_prs.nc'
 ...
