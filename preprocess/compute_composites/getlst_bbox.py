@@ -18,7 +18,8 @@ from utils import roundPartial, generate_ptlst_from_start_end
 from composite_funcs import flatten, find_time_bbox, find_time_line
 
 ## load configuration file
-region = 'gulf_of_mexico2' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
+region = 'gulf_of_mexico' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
+ar_varname = 'tARget'
 # import configuration file for case study choice
 yaml_doc = '../../data/domains.yml'
 d = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
@@ -55,7 +56,7 @@ for i, HUC8 in enumerate(HUC8_lst):
     # subset to the current HUC8
     ## keep only trajectories associated with ARs
     tmp = ds.sel(HUC8=HUC8)
-    tmp = tmp.where(tmp.ar_scale > 0, drop=True)
+    tmp = tmp.where(tmp[ar_varname] > 0, drop=True)
 
 
     t_lst = []
@@ -96,7 +97,7 @@ times_df = pd.DataFrame(d)
 times_df = times_df.drop_duplicates(subset=['datetime'])
 
 ## save as CSV dates_region-name.csv
-fname_out = '../../out/line_dates_{0}.csv'.format(region)
+fname_out = '../../out/line_dates_{0}_{1}.csv'.format(region, ar_varname)
 times_df.to_csv(fname_out)
 
 df_lst = []
@@ -105,7 +106,7 @@ for i, HUC8 in enumerate(HUC8_lst):
     # subset to the current HUC8
     ## keep only trajectories associated with ARs
     tmp = ds.sel(HUC8=HUC8)
-    tmp = tmp.where(tmp.ar_scale > 0, drop=True)
+    tmp = tmp.where(tmp[ar_varname] > 0, drop=True)
     t_lst = []
     ## enumerate through start_dates of current subbasin
     for i, st_date in enumerate(tmp.start_date.values):
@@ -129,5 +130,5 @@ df = df.drop_duplicates(subset=['datetime'])
 df = df.drop(['date'], axis=1)
 
 ## save as CSV dates_region-name.csv
-fname_out = '../../out/bbox_dates_{0}.csv'.format(region)
+fname_out = '../../out/bbox_dates_{0}_{1}.csv'.format(region, ar_varname)
 df.to_csv(fname_out)
