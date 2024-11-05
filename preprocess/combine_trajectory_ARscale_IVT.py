@@ -47,16 +47,16 @@ HUC8_IDs = ds.HUC8.values ## get list of HUC8 IDs
 # HUC8_IDs = ['14050001'] ## Upper Yampa
 # HUC8_IDs = ['14010001', '14080101', '14050001'] ## Colorado Headwaters and Upper San Juan
 # HUC8_IDs = ['14020001'] ## East-Taylor
-HUC8_IDs = ['14010002'] ## Blue
+# HUC8_IDs = ['14010002'] ## Blue
 
 ## loop through all HUC8s
 for i, HUC8_ID in enumerate(HUC8_IDs):
     print(i, HUC8_ID)
     ## load watershed trajectories
     # fname = '/expanse/nfs/cw3e/cwp140/preprocessed/UCRB_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
-    # fname = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5_trajectories/combined_extreme/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    fname = '/expanse/nfs/cw3e/cwp140/preprocessed/ERA5_trajectories/combined_extreme/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     # fname = path_to_data + 'preprocessed/ERA5_trajectories/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
-    fname = path_to_data + 'preprocessed/ERA5_trajectories/combined/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    # fname = path_to_data + 'preprocessed/ERA5_trajectories/combined/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     ERA5 = xr.open_dataset(fname)
     ERA5 = ERA5.assign_coords({"lon": ERA5.longitude, "lat": ERA5.latitude, "time": ERA5.time})
     ERA5 = ERA5.drop_vars(["latitude", "longitude"])
@@ -75,8 +75,8 @@ for i, HUC8_ID in enumerate(HUC8_IDs):
     ## merge final dataset
     final_ds = xr.concat(ds_lst, dim="start_date")
 
-    # out_fname = path_to_data + 'preprocessed/ERA5_trajectories/combined_extreme_AR/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    out_fname = path_to_data + 'preprocessed/ERA5_trajectories/combined_extreme_AR/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
     # out_fname = '/expanse/nfs/cw3e/cwp140/preprocessed/UCRB_trajectories/combined/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
-    out_fname = path_to_data + 'preprocessed/ERA5_trajectories/combined_all/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
+    # out_fname = path_to_data + 'preprocessed/ERA5_trajectories/combined_all/PRISM_HUC8_{0}.nc'.format(HUC8_ID)
 
     final_ds.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')

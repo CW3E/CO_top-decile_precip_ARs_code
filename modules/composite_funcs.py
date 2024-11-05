@@ -107,25 +107,14 @@ def compute_vertical_composites(varname, anomaly, ar_dates, ssn, region):
 
     return a_mean
 
-def compute_horizontal_composites(varname, anomaly, ar_dates, ssn, region):
+def compute_horizontal_composites(varname, anomaly, ar_dates, ssn, region, lag):
     ## function that computes composites (anomaly or non-anomaly) for defined start_mon and end_mon    
     ## for DJF, MAM, JJA, SON, NDJFMA, and MJJASON
     ## compute anomaly composites - anomaly = True
     ## compute non-anomaly composites - anomaly=False
 
     ## set start_mon and end_mon based on ssn
-    if ssn == 'DJF':
-        start_mon, end_mon = (12, 2)
-    elif ssn == 'MAM':
-        start_mon, end_mon = (3, 5)
-    elif ssn == 'JJA':
-        start_mon, end_mon = (6, 8)
-    elif ssn == 'SON':
-        start_mon, end_mon = (9, 11)
-    elif ssn == 'NDJFMA':
-        start_mon, end_mon = (11, 4)
-    elif ssn == 'MJJASO':
-        start_mon, end_mon = (5, 10)
+    start_mon, end_mon = get_startmon_and_endmon(ssn)
 
     ## load data
     path_to_data = '/expanse/nfs/cw3e/cwp140/downloads/ERA5/'
@@ -144,25 +133,27 @@ def compute_horizontal_composites(varname, anomaly, ar_dates, ssn, region):
     ## subset to start_month and end_month
     ds = select_months_ds(ds, start_mon, end_mon, 'time')
     ds = ds.load()
+    ndays = len(ds.time) # number of unique days
+    print(ndays)
 
     ## run students t-test if anomaly == True
     if anomaly == True:    
         popmean = np.zeros([len(ds.latitude), len(ds.longitude)]) ## population mean
-        ndays = len(ds.time) # number of unique days
-        print(ndays)
+        
         # calculate t-value based on ndays
         a_mean, tval_mask = ttest_1samp_new(a=ds, popmean=popmean, dim='time', n=ndays)
-
+        a_mean = a_mean.assign(ndays=ndays)
         ## write to netCDF
-        out_fname = out_path + '{0}/{2}/filtered_anomaly_composite_{0}_{1}.nc'.format(varname, ssn, region)
+        out_fname = out_path + '{0}/{2}/filtered_anomaly_composite_{0}_{1}_lag{3}.nc'.format(varname, ssn, region, lag)
         a_mean.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
 
-        out_fname = out_path + '{0}/{2}/filtered_anomaly_composite_tvals_{0}_{1}.nc'.format(varname, ssn, region)
+        out_fname = out_path + '{0}/{2}/filtered_anomaly_composite_tvals_{0}_{1}_lag{3}.nc'.format(varname, ssn, region, lag)
         tval_mask.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
 
     else:
         a_mean = ds.mean('time')
-        out_fname = out_path + '{0}/{2}/composite_{0}_{1}.nc'.format(varname, ssn, region)
+        a_mean = a_mean.assign(ndays=ndays)
+        out_fname = out_path + '{0}/{2}/composite_{0}_{1}_lag{3}.nc'.format(varname, ssn, region, lag)
         a_mean.to_netcdf(path=out_fname, mode = 'w', format='NETCDF4')
 
     return a_mean
@@ -202,7 +193,7 @@ def find_time_bbox(ERA5, lats, lons):
     ts_lst = []
     if len(idx_lst) > 0:
         for m, idx in enumerate(idx_lst):
-            ## this is the time of the trajectory when it crosses west coast
+            ## this is the time of the trajectory within the bounding box
             time_match = z.sel(location=idx_lst[m][0]).time.values
             ts = pd.to_datetime(str(time_match)).strftime('%Y-%m-%d %H')
             ts_lst.append(ts)
@@ -213,6 +204,7 @@ def find_time_line(ERA5, coord_pairs):
     ## create a dataset of the trajectory points that match ERA5 spacing
     t = xr.DataArray(ERA5.time.values, dims=['location'], name='time')
     lev = xr.DataArray(ERA5.level.values, dims=['location'], name='level')
+    st_time = xr.DataArray(ERA5.start_date.values, dims=[], name='start_time')
     
     # create a list of lat/lons that match ERA5 spacing
     x = xr.DataArray(roundPartial(ERA5.lon.values, 0.25), dims=['location'])
@@ -222,7 +214,7 @@ def find_time_line(ERA5, coord_pairs):
     y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
     
     # create a new dataset that has the trajectory lat and lons and the closest ERA5 lat/lons as coords
-    z = xr.merge([x, y, t, lev])
+    z = xr.merge([x, y, t, lev, st_time])
     
     idx_lst = []
     for i, (x, y) in enumerate(zip(z.lon.values, z.lat.values)):

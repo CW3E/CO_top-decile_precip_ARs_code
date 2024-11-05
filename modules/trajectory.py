@@ -319,6 +319,8 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
         time_match = z.sel(location=idx_lst[0][0]).time.values
         ts = pd.to_datetime(str(time_match)).strftime('%Y-%m-%d %H')
         ERA5 = ERA5.assign(time_match=ts)
+        ERA5 = ERA5.assign(lat_match=idx_lat)
+        ERA5 = ERA5.assign(lon_match=idx_lon)
 
         #####################
         ### STRICT METHOD ###

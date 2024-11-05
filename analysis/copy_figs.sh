@@ -19,10 +19,10 @@ choropleth_map_portrait
 time_series_extreme
 ARScale_basin_WY
 heatmaps_basin_WY
-NDJFMA_composite_trajectory
-MJJASO_composite_trajectory
-NDJFMA_anomaly_composite_trajectory
-MJJASO_anomaly_composite_trajectory
+NDJFMA_IVT_700z_composite
+MJJASO_IVT_700z_composite
+NDJFMA_IVT_700z_anom_composite
+MJJASO_IVT_700z_anom_composite
 ## schematic
 )
 
