@@ -55,21 +55,37 @@ do
 done
 
 # ### supplemental figs
-# supp_array=(
-# composite_ar_types_bias
-# )
+array=(
+## sensitivity test
+## choropleth variability
+ARScale_basin_SSN
+heatmaps_basin_SSN
+DJF_IVT_700z_anom_composite
+MAM_IVT_700z_anom_composite
+JJA_IVT_700z_anom_composite
+SON_IVT_700z_anom_composite
+)
 
-# ## new names to be given
-# supp_array2=(
-# 1
-# )
-# for i in ${!supp_array[*]}
-# do 
-#     infile="${maindir}${supp_array[$i]}.png"
-#     outfile="${finaldir}figS${supp_array2[$i]}.png"
-# #     echo "${infile} to ${outfile}"
-#     cp -v ${infile} ${outfile}
-# done
+# new names to be fig<name given in array2>
+array2=(
+3
+4
+5
+6
+7
+8
+)
+for i in ${!array[*]}
+do 
+    ## copy to final_figs dir
+    infile="${maindir}${array[$i]}.png"
+    outfile="${finaldir}figS${array2[$i]}.png"
+#     echo "${infile} to ${outfile}"
+    cp -v ${infile} ${outfile}
+    ## copy to overleaf dir
+    outfile="${overleafdir}figS${array2[$i]}.png"
+    cp -v ${infile} ${outfile}
+done
 
 ## convert png to pdf
 # python png_to_pdf.py
