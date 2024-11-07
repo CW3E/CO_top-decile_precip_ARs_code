@@ -25,4 +25,5 @@ analysis/core*
 
 *.yaml
 *.yml
+*.zip
 *.txt
