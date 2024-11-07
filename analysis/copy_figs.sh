@@ -15,14 +15,12 @@ overleafdir="/home/dnash/repos/CO_top-decile_precip_ARs/"
 array=(
 ar_freq_overhead
 sensitivity_test_trajectory_mar2003
-choropleth_map_portrait
-time_series_extreme
 ARScale_basin_WY
 heatmaps_basin_WY
-NDJFMA_IVT_700z_composite
-MJJASO_IVT_700z_composite
-NDJFMA_IVT_700z_anom_composite
-MJJASO_IVT_700z_anom_composite
+NDJFMA_IVT_700z_composite_lag0
+MJJASO_IVT_700z_composite_lag0
+choropleth_map_portrait
+time_series_extreme
 ## schematic
 )
 
@@ -36,8 +34,6 @@ array2=(
 6
 7
 8
-9
-10
 )
 
 
@@ -57,23 +53,26 @@ done
 # ### supplemental figs
 array=(
 ## sensitivity test
-## choropleth variability
 ARScale_basin_SSN
 heatmaps_basin_SSN
-DJF_IVT_700z_anom_composite
-MAM_IVT_700z_anom_composite
-JJA_IVT_700z_anom_composite
-SON_IVT_700z_anom_composite
+NDJFMA_IVT_700z_composite_lag1
+MJJASO_IVT_700z_composite_lag1
+DJF_IVT_700z_anom_composite_lag0
+MAM_IVT_700z_anom_composite_lag0
+JJA_IVT_700z_anom_composite_lag0
+SON_IVT_700z_anom_composite_lag0
+## choropleth variability
 )
 
 # new names to be fig<name given in array2>
 array2=(
+2
 3
 4
 5
 6
 7
-8
+
 )
 for i in ${!array[*]}
 do 
