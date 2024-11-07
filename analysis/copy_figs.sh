@@ -57,10 +57,10 @@ ARScale_basin_SSN
 heatmaps_basin_SSN
 NDJFMA_IVT_700z_composite_lag1
 MJJASO_IVT_700z_composite_lag1
-DJF_IVT_700z_anom_composite_lag0
-MAM_IVT_700z_anom_composite_lag0
-JJA_IVT_700z_anom_composite_lag0
-SON_IVT_700z_anom_composite_lag0
+DJF_IVT_700z_composite_lag0
+MAM_IVT_700z_composite_lag0
+JJA_IVT_700z_composite_lag0
+SON_IVT_700z_composite_lag0
 ## choropleth variability
 )
 
@@ -72,7 +72,8 @@ array2=(
 5
 6
 7
-
+8
+9
 )
 for i in ${!array[*]}
 do 
