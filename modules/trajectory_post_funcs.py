@@ -16,11 +16,14 @@ from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_r
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
-def calculate_heatmaps_from_trajectories(ds, normalize=True):
+def calculate_heatmaps_from_trajectories(ds, normalize=True, AR=True):
 
     ## open as geopandas dataframe
     df = ds.to_dataframe()
-    df = df.dropna(subset = ['ar_scale'])
+    if AR == True:
+        df = df.dropna(subset = ['ar_scale'])
+    else: 
+        df = df
     gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon, df.lat), crs="EPSG:4326")
 
     ### Code is based on https://james-brennan.github.io/posts/fast_gridding_geopandas/

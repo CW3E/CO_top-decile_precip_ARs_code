@@ -41,19 +41,22 @@ def terrain_cmap(vmax=3000):
 
     return terrain_map, divnorm
 
-def plot_terrain(ax, ext, vmax, greyscale=True):
+def plot_terrain(ax, ext, vmax, greyscale=True, zorder=100):
     fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
     datacrs = ccrs.PlateCarree()
     grid = xr.open_dataset(fname)
     grid = grid.where(grid.z > 0) # mask below sea level
     grid = grid.sel(x=slice(ext[0], ext[1]), y=slice(ext[2], ext[3]))
     if greyscale == True:
-        cs = ax.pcolormesh(grid.x, grid.y, grid.z,
-                            cmap=cmo.gray_r, transform=datacrs, alpha=0.7)
+        cmap = cmo.gray_r
+        bnds = np.arange(0, vmax, 250)
+        norm = mcolors.BoundaryNorm(bnds, cmap.N)
+        cs = ax.pcolormesh(grid.x, grid.y, grid.z, vmin=0, vmax=vmax,
+                            cmap=cmo.gray_r, transform=datacrs, alpha=0.7, zorder=zorder)
     else:
         terrain_map, divnorm = terrain_cmap(vmax)
         cs = ax.pcolormesh(grid.x, grid.y, grid.z, rasterized=True, norm=divnorm,
-                            cmap=terrain_map, shading='auto', transform=datacrs, alpha=0.6)
+                            cmap=terrain_map, shading='auto', transform=datacrs, alpha=0.6, zorder=zorder)
     
     return ax, cs
 

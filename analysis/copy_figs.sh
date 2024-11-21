@@ -13,6 +13,7 @@ overleafdir="/home/dnash/repos/CO_top-decile_precip_ARs/"
 
 # fig names in main folder
 array=(
+elevation_map_with_inset
 ar_freq_overhead
 sensitivity_test_trajectory_mar2003
 ARScale_basin_WY
@@ -21,7 +22,7 @@ NDJFMA_IVT_700z_composite_lag0
 MJJASO_IVT_700z_composite_lag0
 choropleth_map_portrait
 time_series_extreme
-## schematic
+schematic
 )
 
 # new names to be fig<name given in array2>
@@ -34,6 +35,8 @@ array2=(
 6
 7
 8
+9
+10
 )
 
 
@@ -55,6 +58,7 @@ array=(
 ## sensitivity test
 ARScale_basin_SSN
 heatmaps_basin_SSN
+heatmaps_basin_WY_nonAR
 NDJFMA_IVT_700z_composite_lag1
 MJJASO_IVT_700z_composite_lag1
 DJF_IVT_700z_composite_lag0
@@ -74,6 +78,7 @@ array2=(
 7
 8
 9
+10
 )
 for i in ${!array[*]}
 do 
