@@ -22,7 +22,6 @@ NDJFMA_IVT_700z_composite_lag0
 MJJASO_IVT_700z_composite_lag0
 choropleth_map_portrait
 time_series_extreme
-schematic
 )
 
 # new names to be fig<name given in array2>
@@ -36,7 +35,6 @@ array2=(
 7
 8
 9
-10
 )
 
 
@@ -55,7 +53,6 @@ done
 
 # ### supplemental figs
 array=(
-## sensitivity test
 ARScale_basin_SSN
 heatmaps_basin_SSN
 heatmaps_basin_WY_nonAR
@@ -70,6 +67,7 @@ SON_IVT_700z_composite_lag0
 
 # new names to be fig<name given in array2>
 array2=(
+1
 2
 3
 4
@@ -78,7 +76,6 @@ array2=(
 7
 8
 9
-10
 )
 for i in ${!array[*]}
 do 

@@ -16,6 +16,44 @@ from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_r
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
+def load_trajectories(name):
+    path_to_data = '/expanse/nfs/cw3e/cwp140/'
+    ## load PRISM watershed precip dataset
+    fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
+    PRISM = xr.open_dataset(fname)
+    
+    HUC8_lst = PRISM.HUC8.values ## get list of HUC8 IDs
+    
+    ## a quick function that assigns each watershed a basin value 
+    ## based on the first 2 numbers of the HUC8 identifier
+    
+    basin_lst = []
+    for i, HUC8_ID in enumerate(HUC8_lst):
+        HUC2 = HUC8_ID[:2]
+        if HUC2 == '14':
+            basin = 'Colorado'
+        elif HUC2 == '13':
+            basin = 'Rio Grande'
+        elif HUC2 == '11':
+            basin = 'Arkansas'
+        elif HUC2 == '10':
+            basin = 'Missouri'
+       
+        basin_lst.append(basin)
+        
+    ds_lst = []
+    for i, HUC8_ID in enumerate(HUC8_lst):
+        fname = path_to_data +'preprocessed/ERA5_trajectories/{1}/PRISM_HUC8_{0}.nc'.format(HUC8_ID, name)
+        ds = xr.open_dataset(fname)
+        ds_lst.append(ds)
+        
+    ## concat ds_lst along HUC8 index
+    ds = xr.concat(ds_lst, pd.Index(HUC8_lst, name="HUC8"))
+    ## add the basin name as a coord
+    ds = ds.assign_coords({'basin': ("HUC8", basin_lst)})
+
+    return ds
+    
 def calculate_heatmaps_from_trajectories(ds, normalize=True, AR=True):
 
     ## open as geopandas dataframe

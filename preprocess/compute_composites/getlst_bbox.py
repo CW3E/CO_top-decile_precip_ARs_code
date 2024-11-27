@@ -18,7 +18,7 @@ from utils import roundPartial, generate_ptlst_from_start_end
 from composite_funcs import flatten, find_time_bbox, find_time_line
 
 ## load configuration file
-region = 'gulf_of_mexico' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
+region = 'pnw' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
 ar_varname = 'ar_scale'
 # import configuration file for case study choice
 yaml_doc = '../../data/domains.yml'
@@ -93,11 +93,11 @@ def get_line_csv(method, coord_pairs):
 
     return times_df
 
-#### FOR CROSS SECTION METHOD ####
-print('... Generating list of dates for line...')
-coord_pairs = generate_ptlst_from_start_end(d[region]['start_pt'][1], d[region]['start_pt'][0], d[region]['end_pt'][1], d[region]['end_pt'][0], pairs=True)
-print(coord_pairs)
-times_df = get_line_csv('line', coord_pairs)
+# #### FOR CROSS SECTION METHOD ####
+# print('... Generating list of dates for line...')
+# coord_pairs = generate_ptlst_from_start_end(d[region]['start_pt'][1], d[region]['start_pt'][0], d[region]['end_pt'][1], d[region]['end_pt'][0], pairs=True)
+# print(coord_pairs)
+# times_df = get_line_csv('line', coord_pairs)
 
 #### FOR BBOX METHOD ####     
 print('... Generating list of dates for box...')

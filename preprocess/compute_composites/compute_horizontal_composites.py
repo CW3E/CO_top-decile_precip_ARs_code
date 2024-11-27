@@ -21,7 +21,7 @@ import composite_funcs as cfuncs
 
 
 ## load ar dates within region
-region_lst = ['san_juan', 'gulf_of_mexico'] ## 'san_juan' 'baja' 'gulf_of_mexico'
+region_lst = ['pnw'] ## 'san_juan' 'baja' 'gulf_of_mexico'
 lag_lst = [0, 1]
 ar_varname = 'ar_scale'
 
