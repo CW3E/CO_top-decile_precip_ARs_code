@@ -10,7 +10,7 @@ from matplotlib.colors import ListedColormap
 
 __all__ = ['cw3ecmaps']
 
-colors = {"arscale": [[10, 193, 255], # blue
+colors = { "arscale": [[10, 193, 255], # blue
                             [4, 255, 3], # green
                             [255, 255, 3], # yellow
                             [255, 166, 2], # orange
