@@ -18,6 +18,7 @@ ar_freq_overhead
 sensitivity_test_trajectory_mar2003
 ARScale_basin_WY
 heatmaps_basin_WY
+ARScale_trajectory_heatmaps_AR
 NDJFMA_IVT_700z_composite_lag0
 MJJASO_IVT_700z_composite_lag0
 choropleth_map_portrait
@@ -35,6 +36,7 @@ array2=(
 7
 8
 9
+10
 )
 
 
@@ -56,6 +58,7 @@ array=(
 ARScale_basin_SSN
 heatmaps_basin_SSN
 heatmaps_basin_WY_nonAR
+ARScale_trajectory-IVT_heatmaps_noAR
 NDJFMA_IVT_700z_composite_lag1
 MJJASO_IVT_700z_composite_lag1
 DJF_IVT_700z_composite_lag0
@@ -76,6 +79,7 @@ array2=(
 7
 8
 9
+10
 )
 for i in ${!array[*]}
 do 
