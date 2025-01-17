@@ -283,7 +283,8 @@ def combine_IVT_and_trajectory(ERA5):
     return ERA5
 
 def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
-    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time') 
+    t = xr.DataArray(ERA5.time.values, dims=['location'], name='time')
+    l = xr.DataArray(ERA5.level.values, dims=['location'], name='level')
 
     # create a list of lat/lons that match ERA5 spacing
     x = xr.DataArray(roundPartial(ERA5.lon.values, 0.25), dims=['location'])
@@ -293,7 +294,7 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
     y = xr.DataArray(ERA5.lat.values, dims=("location"), coords={"lat": y}, name='traj_lats')
 
     # create a new dataset that has the trajectory lat and lons and the closest ERA5 lat/lons as coords
-    z = xr.merge([x, y, t])
+    z = xr.merge([x, y, t, l])
 
     ## Open csv file with coastal coordinates for N. America (ERA5 resolution)
     textpts_fname = '../out/latlon_coast_ERA5.csv'
@@ -318,7 +319,11 @@ def combine_arscale_and_trajectory(ERA5, arscale, ar, tARgetv4):
         ## this is the time of the trajectory when it crosses west coast
         time_match = z.sel(location=idx_lst[0][0]).time.values
         ts = pd.to_datetime(str(time_match)).strftime('%Y-%m-%d %H')
+        ## this is the pressure level when the trajectory crosses the coast
+        lev_match = z.sel(location=idx_lst[0][0]).level.values
+        ## now put all this in the dataset
         ERA5 = ERA5.assign(time_match=ts)
+        ERA5 = ERA5.assign(lev_match=lev_match)
         ERA5 = ERA5.assign(lat_match=idx_lat)
         ERA5 = ERA5.assign(lon_match=idx_lon)
 
