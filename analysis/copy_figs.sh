@@ -17,7 +17,7 @@ elevation_map_with_inset
 ar_freq_overhead
 sensitivity_test_trajectory_mar2003
 ARScale_basin_WY
-heatmaps_basin_WY
+heatmaps_basin_WY_ARscale
 ARScale_trajectory_heatmaps_AR
 NDJFMA_IVT_700z_composite_lag0
 MJJASO_IVT_700z_composite_lag0
