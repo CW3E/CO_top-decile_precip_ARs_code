@@ -65,6 +65,8 @@ DJF_IVT_700z_composite_lag0
 MAM_IVT_700z_composite_lag0
 JJA_IVT_700z_composite_lag0
 SON_IVT_700z_composite_lag0
+heatmaps_basin_WY_gwAR
+heatmaps_basin_WY_rutzAR
 ## choropleth variability
 )
 
@@ -80,6 +82,8 @@ array2=(
 8
 9
 10
+11
+12
 )
 for i in ${!array[*]}
 do 
