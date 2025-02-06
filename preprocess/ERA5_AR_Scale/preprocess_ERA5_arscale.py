@@ -62,7 +62,7 @@ t = ds['time'].isel(time=1) - ds['time'].isel(time=0)
 nhrs = t.values.astype('timedelta64[h]') # convert to hours
 
 ## this grabs the start and stop indices of each AR
-tmp = a.cumsum()-a.cumsum().where(~a).ffill(dim='time').fillna(0).astype(int) # cumulative sum where not 0
+tmp = a.cumsum(dim='time')-a.cumsum(dim='time').where(~a).ffill(dim='time').fillna(0).astype(int) # cumulative sum where not 0
 duration = tmp*nhrs.astype(int)
 duration = duration.rename("duration")
 # duration = duration.compute()
