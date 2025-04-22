@@ -17,7 +17,7 @@ ds = xr.open_dataset(fname)
 ds = ds.sel(date=slice('2000-01-04', '2023-12-31')) ## have to remove Jan 1 and Jan 2 2000 dates bc we don't have Dec 30 and 31, 1999 data
 
 # HUC8_lst = ds.HUC8.values
-HUC8_lst = ['14010002']
+HUC8_lst = ['10180001']
 
 jobcounter = 0
 filecounter = 0
