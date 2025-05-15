@@ -615,9 +615,9 @@ def plot_sensitivity_cbar(cbax, orientation):
     arscale_cbar.set_array([lower-deltac,upper+deltac])
     if orientation == 'horizontal':
         cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'horizontal', ticklocation = 'bottom', ticks=[1, 2, 3, 4])
-        cb.set_label('Year-Month-Day Hour', fontsize=10)
+        # cb.set_label('Year-Month-Day Hour', fontsize=10)
         cb.ax.set_xticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)
     else:
         cb = Colorbar(ax = cbax, mappable = arscale_cbar, orientation = 'vertical', ticklocation = 'right', ticks=[1, 2, 3, 4])
-        cb.set_label('Year-Month-Day Hour', fontsize=10)
+        # cb.set_label('Year-Month-Day Hour', fontsize=10)
         cb.ax.set_yticklabels(["{0}".format(i) for i in cb.get_ticks()], **kw_ticklabels)

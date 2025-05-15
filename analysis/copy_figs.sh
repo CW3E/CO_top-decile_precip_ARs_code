@@ -14,14 +14,11 @@ overleafdir="/home/dnash/repos/CO_top-decile_precip_ARs/"
 # fig names in main folder
 array=(
 elevation_map_with_inset
-ar_freq_overhead
 sensitivity_test_trajectory_mar2003
-ARScale_basin_WY
-heatmaps_basin_WY_ARscale
+trajectory_figs/trajectory_heatmaps_NDJFMA_tARget_AR-True
 ARScale_trajectory_heatmaps_AR
 NDJFMA_IVT_700z_composite_lag0
-MJJASO_IVT_700z_composite_lag0
-choropleth_map_portrait
+choropleth_map_portrait_NDJFMA
 time_series_extreme
 )
 
@@ -34,9 +31,6 @@ array2=(
 5
 6
 7
-8
-9
-10
 )
 
 
@@ -55,18 +49,18 @@ done
 
 # ### supplemental figs
 array=(
-ARScale_basin_SSN
-heatmaps_basin_SSN
-heatmaps_basin_WY_nonAR
-ARScale_trajectory-IVT_heatmaps_noAR
+ar_freq_overhead
+trajectory_figs/trajectory_heatmaps_MJJASO_tARget_AR-True
+trajectory_figs/trajectory_heatmaps_NDJFMA_tARget_AR-False
+trajectory_figs/trajectory_heatmaps_MJJASO_tARget_AR-False
+trajectory_figs/trajectory_heatmaps_NDJFMA_ar_AR-True
+trajectory_figs/trajectory_heatmaps_MJJASO_ar_AR-True
+trajectory_figs/trajectory_heatmaps_NDJFMA_ar_scale_AR-True
+trajectory_figs/trajectory_heatmaps_MJJASO_ar_scale_AR-True
+MJJASO_IVT_700z_composite_lag0
 NDJFMA_IVT_700z_composite_lag1
 MJJASO_IVT_700z_composite_lag1
-DJF_IVT_700z_composite_lag0
-MAM_IVT_700z_composite_lag0
-JJA_IVT_700z_composite_lag0
-SON_IVT_700z_composite_lag0
-heatmaps_basin_WY_gwAR
-heatmaps_basin_WY_rutzAR
+choropleth_map_portrait_MJJASO
 ## choropleth variability
 )
 

@@ -10,25 +10,8 @@ import pandas as pd
 import numpy as np
 
 ## personal modules
-from utils import select_months_ds, generate_ptlst_from_start_end, roundPartial
+from utils import select_months_ds, get_startmon_and_endmon, generate_ptlst_from_start_end, roundPartial
 from statistical_tests import ttest_1samp_new
-
-def get_startmon_and_endmon(ssn):
-    ## set start_mon and end_mon based on ssn
-    if ssn == 'DJF':
-        start_mon, end_mon = (12, 2)
-    elif ssn == 'MAM':
-        start_mon, end_mon = (3, 5)
-    elif ssn == 'JJA':
-        start_mon, end_mon = (6, 8)
-    elif ssn == 'SON':
-        start_mon, end_mon = (9, 11)
-    elif ssn == 'NDJFMA':
-        start_mon, end_mon = (11, 4)
-    elif ssn == 'MJJASO':
-        start_mon, end_mon = (5, 10)
-
-    return start_mon, end_mon
 
 def compute_freezing_level_composites(varname, ar_dates, ssn, region):
    ## load data

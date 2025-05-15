@@ -9,6 +9,23 @@ import glob
 import re
 import numpy as np
 
+def get_startmon_and_endmon(ssn):
+    ## set start_mon and end_mon based on ssn
+    if ssn == 'DJF':
+        start_mon, end_mon = (12, 2)
+    elif ssn == 'MAM':
+        start_mon, end_mon = (3, 5)
+    elif ssn == 'JJA':
+        start_mon, end_mon = (6, 8)
+    elif ssn == 'SON':
+        start_mon, end_mon = (9, 11)
+    elif ssn == 'NDJFMA':
+        start_mon, end_mon = (11, 4)
+    elif ssn == 'MJJASO':
+        start_mon, end_mon = (5, 10)
+
+    return start_mon, end_mon
+
 def roundPartial(value, resolution):
     return np.round(value / resolution) * resolution
 

@@ -16,50 +16,30 @@ from utils import  find_closest_MERRA2_lon_df, find_closest_MERRA2_lon, MERRA2_r
 
 dask.config.set(**{'array.slicing.split_large_chunks': True})
 
-def load_trajectories(name):
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
-    ## load PRISM watershed precip dataset
-    fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
-    PRISM = xr.open_dataset(fname)
+def count_number_trajs(ds):
+    counter = 0
     
-    HUC8_lst = PRISM.HUC8.values ## get list of HUC8 IDs
-    
-    ## a quick function that assigns each watershed a basin value 
-    ## based on the first 2 numbers of the HUC8 identifier
-    
-    basin_lst = []
-    for i, HUC8_ID in enumerate(HUC8_lst):
-        HUC2 = HUC8_ID[:2]
-        if HUC2 == '14':
-            basin = 'Colorado'
-        elif HUC2 == '13':
-            basin = 'Rio Grande'
-        elif HUC2 == '11':
-            basin = 'Arkansas'
-        elif HUC2 == '10':
-            basin = 'Missouri'
-       
-        basin_lst.append(basin)
-        
-    ds_lst = []
-    for i, HUC8_ID in enumerate(HUC8_lst):
-        fname = path_to_data +'preprocessed/ERA5_trajectories/{1}/PRISM_HUC8_{0}.nc'.format(HUC8_ID, name)
-        ds = xr.open_dataset(fname)
-        ds_lst.append(ds)
-        
-    ## concat ds_lst along HUC8 index
-    ds = xr.concat(ds_lst, pd.Index(HUC8_lst, name="HUC8"))
-    ## add the basin name as a coord
-    ds = ds.assign_coords({'basin': ("HUC8", basin_lst)})
+    for l, HUC8 in enumerate(ds.HUC8.values):
+        for m, start_date in enumerate(ds.start_date.values):
+            tmp = ds.sel(HUC8=HUC8, start_date=start_date)
+            x_lst = tmp.lon.values
+            y_lst = tmp.lat.values
+            ## check if all nan
+            test1 = np.isnan(x_lst).all()
+            test2 = np.isnan(y_lst).all()
+            if (test1 == True) & (test2 == True):
+                pass
+            else:
+                counter += 1
 
-    return ds
+    return counter
     
-def calculate_heatmaps_from_trajectories(ds, normalize=True, AR=True):
+def calculate_heatmaps_from_trajectories(ds, ARDT, normalize=None, AR=True):
 
     ## open as geopandas dataframe
     df = ds.to_dataframe()
     if AR == True:
-        df = df.dropna(subset = ['ar_scale'])
+        df = df.dropna(subset = [ARDT])
     else: 
         df = df
     gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon, df.lat), crs="EPSG:4326")
@@ -72,7 +52,7 @@ def calculate_heatmaps_from_trajectories(ds, normalize=True, AR=True):
     ## Set up the grid to match ERA5 spacing
     xmin, ymin, xmax, ymax= [-175., 15., -85.,  63.]
     # how many cells across
-    cell_size = 0.5 ## quarter degree cell size
+    cell_size = 0.5 ## half degree degree cell size
     # ncells_x = (xmax-xmin)/cell_size
     # ncells_y = (ymax-ymin)/cell_size
     
@@ -98,14 +78,16 @@ def calculate_heatmaps_from_trajectories(ds, normalize=True, AR=True):
     # put this into cell
     cell.loc[dissolve.index, 'n_traj'] = dissolve.n_traj.values
 
-    ## normalize cell using min-max method
-    max = cell['n_traj'].max()
-    min = cell['n_traj'].min()
-    denom = max-min
-
-    if normalize == True:
+    if normalize == 'min-max':
+        ## normalize cell using min-max method
+        max = cell['n_traj'].max()
+        min = cell['n_traj'].min()
+        denom = max-min
         cell['n_traj'] = (cell['n_traj'] - min)/denom
-    else:
+    elif normalize == 'percent':
+        total_count = count_number_trajs(ds)
+        cell['n_traj'] = (cell['n_traj']/total_count)*100.
+    elif normalize == None:
         cell['n_traj'] = cell['n_traj']
         
     return cell
