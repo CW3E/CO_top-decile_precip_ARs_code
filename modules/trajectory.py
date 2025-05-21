@@ -35,14 +35,19 @@ class calculate_backward_trajectory:
     
     '''
     
-    def __init__(self, ds, event_date, start_time=0, lat_offset=0, lon_offset=0):
+    def __init__(self, ds, event_date, start_time=0, lat_offset=0, lon_offset=0, start_lev=None):
     
         ## get center_date, start_lat, and start_lon
         ## center the date based on what hour you want to run the trajectory
         self.center_date = ds.sel(date=event_date).date.values + np.timedelta64(start_time,'h')
         self.start_lat = ds.sel(date=event_date).lat.values + lat_offset
         self.start_lon = ds.sel(date=event_date).lon.values + lon_offset
-        self.start_lev = ds.sel(date=event_date).sp_start.values
+        if start_lev is None:
+            self.start_lev = ds.sel(date=event_date).sp_start.values
+
+        else:
+            self.start_lev = start_lev
+            
         print(self.center_date, self.start_lat, self.start_lon)
         
         self.varlst = ['time', 'latitude', 'longitude', 'level', 'q', 'u', 'v', 'w', 'IVT', 'deg0l']     
@@ -113,11 +118,14 @@ class calculate_backward_trajectory:
 
         ## Merge pressure level files with IVT and freezing level
         self.ds1 = xr.merge([ds1, IVT, zerodeg])
+        self.ds1 = self.ds1.load()
+        print(self.ds1)
 
     def create_empty_array(self):   
    
         # initial conditions
         t0 = self.ds1.interp(latitude=self.start_lat, longitude=self.start_lon, level=self.start_lev, time=self.center_date)
+        print(t0)
         
         ## append initial conditions to empty DataFrame
         t0_vals = []
@@ -181,6 +189,7 @@ class calculate_backward_trajectory:
         '''
         # get values of previous time step
         t0 = self.df.iloc[idx-1]
+        print(t0)
         
         ## find distance travelled between this hour and previous hour
         del_x, del_y, del_z = self.find_distance_travelled(t0)
@@ -193,9 +202,11 @@ class calculate_backward_trajectory:
         new_lon = t0.longitude + del_x
         new_lev = t0.level + del_z
         new_date = t0.time - np.timedelta64(1,'h')
+        print(new_lat, new_lon, new_lev, new_date)
 
         ## interpolate to new point
         t1 = self.ds1.interp(latitude=new_lat, longitude=new_lon, level=new_lev, time=new_date)
+        print(t1)
         ## put new values in dataframe
         t1_vals = []
         for i in self.varlst:
@@ -203,6 +214,7 @@ class calculate_backward_trajectory:
                 t1_vals.append(t1[i].values)
             else:
                 t1_vals.append(float(t1[i].values))
+        print(t1_vals)
         self.df.iloc[idx] = t1_vals
 
         return self.df

@@ -27,6 +27,26 @@ import matplotlib.gridspec as gridspec
 import seaborn as sns
 import customcmaps as ccmaps
 
+class FixPointNormalize(mcolors.Normalize):
+    """ 
+    Inspired by https://stackoverflow.com/questions/20144529/shifted-colorbar-matplotlib
+    Subclassing Normalize to obtain a colormap with a fixpoint 
+    somewhere in the middle of the colormap.
+
+    This may be useful for a `terrain` map, to set the "sea level" 
+    to a color in the blue/turquise range. 
+    """
+    def __init__(self, vmin=None, vmax=None, sealevel=0, col_val = 0.21875, clip=False):
+        # sealevel is the fix point of the colormap (in data units)
+        self.sealevel = sealevel
+        # col_val is the color value in the range [0,1] that should represent the sealevel.
+        self.col_val = col_val
+        mcolors.Normalize.__init__(self, vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        x, y = [self.vmin, self.sealevel, self.vmax], [0, self.col_val, 1]
+        return np.ma.masked_array(np.interp(value, x, y))
+
 def terrain_cmap(vmax=3000):
     # make a colormap that has land and ocean clearly delineated and of the
     # same length (256 + 256)
@@ -53,10 +73,15 @@ def plot_terrain(ax, ext, vmax, greyscale=True, zorder=100):
         norm = mcolors.BoundaryNorm(bnds, cmap.N)
         cs = ax.pcolormesh(grid.x, grid.y, grid.z, vmin=0, vmax=vmax,
                             cmap=cmo.gray_r, transform=datacrs, alpha=0.7, zorder=zorder)
+    # else:
+    #     terrain_map, divnorm = terrain_cmap(vmax)
+    #     cs = ax.pcolormesh(grid.x, grid.y, grid.z, rasterized=True, norm=divnorm,
+    #                         cmap=terrain_map, shading='auto', transform=datacrs, alpha=0.6, zorder=zorder)
+
     else:
-        terrain_map, divnorm = terrain_cmap(vmax)
-        cs = ax.pcolormesh(grid.x, grid.y, grid.z, rasterized=True, norm=divnorm,
-                            cmap=terrain_map, shading='auto', transform=datacrs, alpha=0.6, zorder=zorder)
+        norm = FixPointNormalize(sealevel=0, vmax=vmax)
+        cs = ax.pcolormesh(grid.x, grid.y, grid.z, rasterized=True, norm=norm,
+                           cmap=plt.cm.terrain, shading='auto', transform=datacrs, alpha=0.6, zorder=zorder)
     
     return ax, cs
 

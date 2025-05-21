@@ -14,18 +14,18 @@ overleafdir="/home/dnash/repos/CO_top-decile_precip_ARs/"
 # fig names in main folder
 array=(
 elevation_map_with_inset
-sensitivity_test_trajectory_mar2003
+# sensitivity_test_trajectory_mar2003
 trajectory_figs/trajectory_heatmaps_NDJFMA_tARget_AR-True
-ARScale_trajectory_heatmaps_AR
+trajectory_figs/HUC8_trajectory_heatmaps_NDJFMA_tARget_AR-True
 NDJFMA_IVT_700z_composite_lag0
 choropleth_map_portrait_NDJFMA
-time_series_extreme
+time_series_extreme_NDJFMA
 )
 
 # new names to be fig<name given in array2>
 array2=(
 1
-2
+
 3
 4
 5
@@ -61,6 +61,7 @@ MJJASO_IVT_700z_composite_lag0
 NDJFMA_IVT_700z_composite_lag1
 MJJASO_IVT_700z_composite_lag1
 choropleth_map_portrait_MJJASO
+time_series_extreme_MJJASO
 ## choropleth variability
 )
 
@@ -78,6 +79,7 @@ array2=(
 10
 11
 12
+13
 )
 for i in ${!array[*]}
 do 

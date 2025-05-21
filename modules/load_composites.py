@@ -9,7 +9,7 @@ import pandas as pd
 
 def load_non_anomaly_composites(ssn, ext):
     ## iterate through options
-    region_lst = ['baja', 'san_juan', 'gulf_of_mexico', 'pnw']
+    region_lst = ['baja', 'gulf_of_mexico', 'pnw']
     varname_lst = ['700z', 'ivt']
     lag_lst = [0, 1]
     ds_lst3 = []

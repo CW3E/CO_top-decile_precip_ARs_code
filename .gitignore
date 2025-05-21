@@ -21,6 +21,7 @@ preprocess/ERA5_AR_Scale/slurm_out/*
 preprocess/compute_climatology/ERA5_prs/slurm_out/*
 preprocess/compute_climatology/ERA5_sfc/slurm_out/*
 analysis/plot_trajectories/slurm_out/*
+preprocess/compute_composites/slurm_out/*
 ##ignore core files
 analysis/core*
 

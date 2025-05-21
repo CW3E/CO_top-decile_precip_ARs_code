@@ -18,8 +18,8 @@ from utils import roundPartial, generate_ptlst_from_start_end
 from composite_funcs import flatten, find_time_bbox, find_time_line
 
 ## load configuration file
-region = 'pnw' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
-ar_varname = 'ar_scale'
+region = 'gulf_of_mexico' ## 'san_juan', 'san_juan2', 'baja' 'gulf_of_mexico'
+ar_varname = 'tARget'
 # import configuration file for case study choice
 yaml_doc = '../../data/domains.yml'
 d = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)

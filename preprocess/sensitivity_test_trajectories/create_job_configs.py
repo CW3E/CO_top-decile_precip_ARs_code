@@ -11,23 +11,14 @@ import itertools
 import xarray as xr
 import pandas as pd
 
-## get list of HUC8 trajectories
-path_to_data = '/expanse/lustre/scratch/dnash/temp_project/'
-fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
-ds = xr.open_dataset(fname)
-
 ## we only want to test these four watersheds
-HUC8_lst = [14050001, ## upper yampa
-               14030002, ## upper dolores
-               10190002, ## 'Upper South Platte'
-               11020001 ## Arkansas Headwaters
-              ]
+HUC8_lst = [14050001, 14010004, 14020002, 14080101]
 
 ## we want to test these dates
 date_lst = ['20030317', '20030318', '20030319', ## March 2003 Blizzard (>50 inches in Denver)
-            '20130910', '20130911', '20130912', ## Lyons Flooding
-            '20170109', '20170110', ## really strong chinook winds (iconic Sequoia tree cave-in in CA)
-            '20190313', '20190314' ## Bomb Cyclone Storm (same as Jerry's case study)
+            # '20130910', '20130911', '20130912', ## Lyons Flooding
+            # '20170109', '20170110', ## really strong chinook winds (iconic Sequoia tree cave-in in CA)
+            # '20190313', '20190314' ## Bomb Cyclone Storm (same as Jerry's case study)
            ]
 
 lev_lst = [800., 700., 600., 500.] # different heights to run through

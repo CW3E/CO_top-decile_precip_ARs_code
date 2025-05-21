@@ -6,12 +6,11 @@
 ######################################################################
 
 import sys
+import yaml
 import itertools
 import xarray as xr
 import numpy as np
 import pandas as pd
-# import wrf
-
 
 # import personal modules
 # Path to modules
@@ -19,37 +18,32 @@ sys.path.append('../../modules')
 # Import my modules
 import composite_funcs as cfuncs
 
+## get dict info for job
+config_file = str(sys.argv[1]) # this is the config file name
+job_info = str(sys.argv[2]) # this is the job name
 
-## load ar dates within region
-region_lst = ['pnw'] ## 'san_juan' 'baja' 'gulf_of_mexico'
-lag_lst = [0, 1]
-ar_varname = 'ar_scale'
+config = yaml.load(open(config_file), Loader=yaml.SafeLoader) # read the file
+ddict = config[job_info] # pull the job info from the dict
 
-for i, region in enumerate(region_lst):
-    for j, lag in enumerate(lag_lst):
-        ## load ar dates with region (include HUC8 and start date for adding trajectories)
-        fname = '../../out/bbox_dates_{0}_full_{1}.csv'.format(region, ar_varname)
-        df = pd.read_csv(fname)
-        df['day'] = pd.to_datetime(df['time']).dt.normalize()
-        
-        ## make a copy of the df but keep only time/index
-        d = {'datetime': df.day.values}
-        ar_dates = pd.DataFrame(d)
-        ar_dates = ar_dates.drop_duplicates(subset=['datetime'])
-        ar_dates = ar_dates.sort_values(by='datetime')
-        ar_dates = ar_dates.datetime.values + pd.Timedelta(days=lag)
-        
-        ## iterate through options
-        varname_lst = ['700z', 'ivt']
-        ssn_lst = ['DJF', 'MAM', 'JJA', 'SON', 'NDJFMA', 'MJJASO']
-        anom_lst = [True, False]
-        
-        a = [varname_lst, ssn_lst, anom_lst]
-        
-        option_lst = list(itertools.product(*a))
-        for i, lst in enumerate(option_lst):
-            anomaly = lst[2]
-            ssn = lst[1]
-            varname = lst[0]
-            print('Anomaly:', anomaly, 'Season:', ssn, 'Variable:', varname)
-            tmp = cfuncs.compute_horizontal_composites(varname, anomaly, ar_dates, ssn, region, lag)
+region = ddict['region']
+lag = ddict['lag']
+ARDT = ddict['ARDT']
+ssn = ddict['ssn']
+anomaly = ddict['anom']
+varname = ddict['varname']
+
+
+## load ar dates with region (include HUC8 and start date for adding trajectories)
+fname = '../../out/bbox_dates_{0}_full_{1}.csv'.format(region, ARDT)
+df = pd.read_csv(fname)
+df['day'] = pd.to_datetime(df['time']).dt.normalize() ## the time the trajectory crosses the box
+# df['day'] = pd.to_datetime(df['start_time']).dt.normalize() ## the time the trajectorie is in Colorado
+
+## make a copy of the df but keep only time/index
+d = {'datetime': df.day.values}
+ar_dates = pd.DataFrame(d)
+ar_dates = ar_dates.drop_duplicates(subset=['datetime'])
+ar_dates = ar_dates.sort_values(by='datetime')
+ar_dates = ar_dates.datetime.values + pd.Timedelta(days=lag)
+
+tmp = cfuncs.compute_horizontal_composites(varname, anomaly, ar_dates, ssn, region, lag)

@@ -46,7 +46,7 @@ lev_t = ddict['lev']
 
 ## set starting lat/lon
 ## choose this based on extreme precip days
-fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO.nc'
+fname = '/expanse/nfs/cw3e/cwp140/preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
 ds = xr.open_dataset(fname)
 # start with single event from single watershed
 ds = ds.sel(HUC8=HUC8_ID)

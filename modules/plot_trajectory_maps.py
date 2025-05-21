@@ -27,7 +27,7 @@ from utils import select_months_ds, select_months_df, get_startmon_and_endmon
 from plotter import draw_basemap, plot_arscale_cbar
 from load_shapefiles import load_region_shp, load_HUC8
 
-def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None):
+def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None, HUC8=False):
     '''
     Given a plot Axes and data, this returns the plot with a heatmap
     
@@ -55,10 +55,11 @@ def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None):
     ## now calculate heatmaps from remaining trajectories
     cell = calculate_heatmaps_from_trajectories(data, ARDT, normalize=normalize, AR=AR)
 
-    ## create segmented cmap
-    # cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 35, 5))
     if normalize == None:
-        cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 110, 10))
+        if HUC8 == True:
+            cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 25, 5))
+        else:
+            cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 110, 10))
         cmap_lbl = "Trajectory Frequency (count)"
     elif normalize == 'percent':
         cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 12, 2))
@@ -193,15 +194,18 @@ def subset_gdf_to_plot(gdf, ARDT, ssn, AR, region=None, basin=None, HUC8=None):
     data : xarray dataset object
         dataset object subset to the specified parameters
     '''
+    
     ## subset to region, basin, or HUC8
     if basin is not None:
         idx = (gdf['basin'] == basin)
+        gdf = gdf.loc[idx]
     if region is not None:
         idx = (gdf['region'] == region)
+        gdf = gdf.loc[idx]
     if HUC8 is not None:
-        idx = (gdf['HUC8'] == HUC8)
-
-    gdf = gdf.loc[idx]
+        idx = (gdf['HUC8'] == str(HUC8))
+        gdf = gdf.loc[idx]
+    
     if ssn is not None:    
         ## subset to start_month and end_month based on ssn
         start_mon, end_mon = get_startmon_and_endmon(ssn)
@@ -230,7 +234,7 @@ def plot_trajectory_heatmaps(ds, gdf, ddict):
     region_lst = ddict['region_lst']
 
     left_lbl = ['Upper Yampa', 'Roaring Fork', 'Upper Gunnison', 'Upper San Juan']
-    left_lbl = ['Northwestern CO', 'Southwestern CO', 'Rio Grande', 'Eastern CO']
+    left_lbl = ['Northwestern', 'Southwestern', 'Rio Grande', 'Eastern']
 
     ## load watershed shapefile and predefined regions shapefile
     polys = load_HUC8()
@@ -292,7 +296,7 @@ def plot_trajectory_heatmaps(ds, gdf, ddict):
         
         ## add in subbasin shapefile
         plot_poly.crs = 'epsg:3857'
-        plot_poly.plot(ax=ax, edgecolor='red', color='None', zorder=99, lw=0.75)
+        plot_poly.plot(ax=ax, edgecolor='k', color='None', zorder=99, lw=0.75)
     
         ## add in a, b, c label
         ax.text(0.03, 0.96, titlestring[0][i], ha='left', va='top', transform=ax.transAxes, fontsize=11., backgroundcolor='white', zorder=101)
@@ -309,7 +313,7 @@ def plot_trajectory_heatmaps(ds, gdf, ddict):
         ax = draw_basemap(ax, extent=ext, xticks=dx, yticks=dy, left_lats=False, 
                           right_lats=False, bottom_lons=blon_lst[i])
         ax.set_extent(ext, datacrs)
-        ax.add_feature(cfeature.STATES, edgecolor='0.4', linewidth=0.8)
+        ax.add_feature(cfeature.STATES, edgecolor='0.4', linewidth=0.8, zorder=98)
         
         ## add spaghetti maps
         subset_gdf = subset_gdf_to_plot(gdf, ARDT, ssn, ar, region=region_lst[i], basin=None, HUC8=None)
@@ -318,7 +322,7 @@ def plot_trajectory_heatmaps(ds, gdf, ddict):
                 
         ## add in shapefile
         plot_poly.crs = 'epsg:3857'
-        plot_poly.plot(ax=ax, edgecolor='red', color='None', zorder=99, lw=0.75)
+        plot_poly.plot(ax=ax, edgecolor='k', color='None', zorder=99, lw=0.75)
         ## add in a, b, c label
         ax.text(0.03, 0.96, titlestring[1][i], ha='left', va='top', transform=ax.transAxes, fontsize=11., backgroundcolor='white', zorder=101)
     

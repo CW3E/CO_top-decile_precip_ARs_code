@@ -12,11 +12,7 @@ import pandas as pd
 import glob
 
 ## get list of HUC8 IDs
-HUC8_lst = [14050001, ## upper yampa
-            14030002, ## upper dolores
-            10190002, ## 'Upper South Platte'
-            11020001 ## Arkansas Headwaters
-            ]
+HUC8_lst = [14050001, 14010004, 14020002, 14080101]
 
 ## loop through all HUC8s
 for i, HUC8_ID in enumerate(HUC8_lst):
