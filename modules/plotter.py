@@ -62,9 +62,9 @@ def terrain_cmap(vmax=3000):
     return terrain_map, divnorm
 
 def plot_terrain(ax, ext, vmax, greyscale=True, zorder=100):
-    fname = '/expanse/nfs/cw3e/cwp140/downloads/ETOPO1_Bed_c_gmt4.grd'
+    fname = '/cw3e/mead/projects/cwp162/data/downloads/ETOPO1_Bed_c_gmt4.grd'
     datacrs = ccrs.PlateCarree()
-    grid = xr.open_dataset(fname)
+    grid = xr.open_dataset(fname, engine='netcdf4')
     grid = grid.where(grid.z > 0) # mask below sea level
     grid = grid.sel(x=slice(ext[0], ext[1]), y=slice(ext[2], ext[3]))
     if greyscale == True:

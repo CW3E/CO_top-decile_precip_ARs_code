@@ -11,10 +11,13 @@ import geopandas as gpd
 from shapely import LineString
 import numpy as np
 
+# Global variable
+path_to_data = "/cw3e/mead/projects/cwp162/data/"
+yaml_doc = '/cw3e/mead/projects/cwp162/repos/CO_top-decile_precip_ARs_code/data/HUC8_regions.yml'
+
 def load_trajectories_based_on_basin():
      
     ## load PRISM watershed precip dataset to get list of HUC8s
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
     PRISM = xr.open_dataset(fname)
     HUC8_lst = PRISM.HUC8.values ## get list of HUC8 IDs
@@ -50,12 +53,10 @@ def load_trajectories_based_on_basin():
     return ds
 
 def load_trajectories_based_on_region():
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     # import configuration file for region list of HUC8s
-    yaml_doc = '/home/dnash/repos/eaton_scripps_CO_ARs/data/HUC8_regions.yml'
     config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
     
-    region_lst = ['northern_upper_CO', 'southern_upper_CO', 'rio_grande', 'eastern_CO']
+    region_lst = ['northwestern_CO', 'southwestern_CO', 'rio_grande', 'eastern_CO']
     ds_final = []
     for i, region in enumerate(region_lst):
         HUC8_lst = config[region]
@@ -118,17 +119,15 @@ def create_geopandas_from_trajectories(ds, region, HUC8):
 
 
 def load_gdf_trajectories_based_on_region():
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     
     print('Reading PRISM data')
     fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
     PRISM = xr.open_dataset(fname)
     
     # import configuration file for region list of HUC8s
-    yaml_doc = '/home/dnash/repos/eaton_scripps_CO_ARs/data/HUC8_regions.yml'
     config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
     
-    region_lst = ['northern_upper_CO', 'southern_upper_CO', 'rio_grande', 'eastern_CO']
+    region_lst = ['northwestern_CO', 'southwestern_CO', 'rio_grande', 'eastern_CO']
     gdf_lst = []
     for i, region in enumerate(region_lst):
         HUC8_lst = config[region]

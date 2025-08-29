@@ -10,10 +10,13 @@ import yaml
 import pandas as pd
 import xarray as xr
 import geopandas as gpd
+import global_vars
 
+# Global variable
+path_to_data = global_vars.path_to_data
+path_to_repo = global_vars.path_to_repo
 
 def load_HUC8():
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     ## load PRISM watershed precip dataset
     fname = path_to_data + 'preprocessed/PRISM/PRISM_HUC8_CO_sp.nc'
     PRISM = xr.open_dataset(fname)
@@ -35,10 +38,10 @@ def load_HUC8():
 
 
     # import configuration file for region list of HUC8s
-    yaml_doc = '/home/dnash/repos/eaton_scripps_CO_ARs/data/HUC8_regions.yml'
+    yaml_doc = path_to_repo+'data/HUC8_regions.yml'
     config = yaml.load(open(yaml_doc), Loader=yaml.SafeLoader)
     
-    region_lst = ['northern_upper_CO', 'southern_upper_CO', 'rio_grande', 'eastern_CO']
+    region_lst = ['northwestern_CO', 'southwestern_CO', 'rio_grande', 'eastern_CO']
     df_lst = []
     for i, region in enumerate(region_lst):
         HUC8_lst = config[region]
@@ -59,14 +62,12 @@ def load_HUC8():
     return polys
 
 def load_region_shp(polys):
-
-    ## create a shapefile of the 4 regions using dissolve
-    regions = polys.dissolve(by='region_name', aggfunc='sum')
+    polys_subset = polys[['region_name', 'geometry']]    ## create a shapefile of the 4 regions using dissolve
+    regions = polys_subset.dissolve(by='region_name')
 
     return regions
 
 def load_continental_divide():
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     ## load continental divide shapefile
     fp = path_to_data + 'downloads/continental_divide_shapefile/pw312bv3382.shp'
     divide = gpd.read_file(fp, crs="ESPG:4326")
@@ -74,7 +75,6 @@ def load_continental_divide():
     return divide
 
 def load_HUC2():
-    path_to_data = '/expanse/nfs/cw3e/cwp140/'
     ## load HU2 shapefile for regions 10, 11, 13, 14
     region_lst = [10, 11, 13, 14]
     WBD_lst = []

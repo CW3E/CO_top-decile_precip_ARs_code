@@ -17,7 +17,8 @@ Navigate to [https://prism.oregonstate.edu](https://prism.oregonstate.edu/), the
 Navigate to https://geo.colorado.edu/catalog/47540-5c8ff914a84a6c000a68f3a8 and then click on **Original Shapefile** to download.
 
 1. Navigate and login to Earth Explorer https://earthexplorer.usgs.gov/. Select the "Data Sets" tab and type in "GMTED2010" in the "Data Set Search" box. From the drop-down box, select GMTED2010. Next, select the "Additional Criteria" tab and click the + icon by Entity ID. Type "GMTED2010N50W150" into the box. Select the Results >> button and wait for the results to load. The correct tile should show up in the results and can be confirmed by clicking the footprint icon. To download, select the icon with the green down arrow and then select the Download button under the "7.5 ARC SEC (711.85 MiB)" download option.
-2. Download ERA5 pressure level data using cds-api.
+   
+3. Download ERA5 pressure level data using cds-api.
 
 In the `downloads/ERA5` directory, run `create_job_configs.py` to create a series of config_X.yaml and calls_X.txt files to run downloads in parallel. Then submit the jobs using sbatch and the `run_download_ERA5.slurm` script. This will download u, v, and w wind, and specific humidity on pressure levels
 
