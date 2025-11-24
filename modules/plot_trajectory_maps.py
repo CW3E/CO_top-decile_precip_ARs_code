@@ -27,7 +27,7 @@ from utils import select_months_ds, select_months_df, get_startmon_and_endmon
 from plotter import draw_basemap, plot_arscale_cbar
 from load_shapefiles import load_region_shp, load_HUC8
 
-def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None, HUC8=False):
+def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None, HUC8=False, cbar_orientation='horizontal'):
     '''
     Given a plot Axes and data, this returns the plot with a heatmap
     
@@ -54,7 +54,7 @@ def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None, HUC8=False):
 
     ## now calculate heatmaps from remaining trajectories
     cell = calculate_heatmaps_from_trajectories(data, ARDT, normalize=normalize, AR=AR)
-
+    print(cell['n_traj'].max())
     if normalize == None:
         if HUC8 == True:
             cmap, norm, bnds = ccmap.cmap_segmented(cmo.deep, np.arange(0, 25, 5))
@@ -68,7 +68,7 @@ def plot_heatmaps(ax, cbax, data, ARDT, AR=False, normalize=None, HUC8=False):
     ## plotting based off of https://geopandas.org/en/stable/docs/user_guide/mapping.html
     cf = cell.plot(ax=ax, column='n_traj', cmap=cmap, vmin=bnds[0], vmax=bnds[-1], 
                    norm=norm, edgecolor=None, legend=True, cax=cbax,
-                  legend_kwds={"label": cmap_lbl, "orientation": "horizontal"})
+                  legend_kwds={"label": cmap_lbl, "orientation": cbar_orientation})
 
     return ax
 

@@ -67,13 +67,13 @@ def load_trajectories_based_on_region():
             ds_lst.append(ds)
         
         ## concat ds_lst along HUC8 index
-        ds = xr.concat(ds_lst, pd.Index(HUC8_lst, name="HUC8"))
+        ds = xr.concat(ds_lst, pd.Index(HUC8_lst, name="HUC8"), join='outer')
         ## add the region name as a coord
         repeated_lst = [region] * len(HUC8_lst)
         ds = ds.assign_coords({'region': ("HUC8", repeated_lst)})
         ds_final.append(ds)
     
-    ds = xr.concat(ds_final, dim='HUC8')
+    ds = xr.concat(ds_final, dim='HUC8', join='outer')
 
     return ds
 

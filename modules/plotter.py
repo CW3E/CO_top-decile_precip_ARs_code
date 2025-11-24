@@ -137,15 +137,22 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
                          'labelsize': 10, 'labelcolor': 'dimgray'}
 
     # Use map projection (CRS) of the given Axes
-    mapcrs = ax.projection    
+    mapcrs = ax.projection
+    
+    if extent is None:
+        ax.set_global()
+    else:
+        ax.set_extent(extent, crs=datacrs)
     
     # Add map features (continents and country borders)
     ax.add_feature(cfeature.LAND, facecolor='0.9')      
-    ax.add_feature(cfeature.BORDERS, edgecolor='0.4', linewidth=0.8)
+    ax.add_feature(cfeature.BORDERS, edgecolor='0.5', linewidth=0.4, zorder=199)
     if coastline == True:
-        ax.add_feature(cfeature.COASTLINE, edgecolor='0.4', linewidth=0.8)
+        ax.add_feature(cfeature.COASTLINE, edgecolor='0.4', linewidth=0.4)
     if mask_ocean == True:
-        ax.add_feature(cfeature.OCEAN, edgecolor='0.4', zorder=12, facecolor='white') # mask ocean
+        ocean = cfeature.NaturalEarthFeature('physical', 'ocean', \
+        scale='50m', edgecolor='none', facecolor='#89C2D9')
+        ax.add_feature(ocean)
         
     ## Tickmarks/Labels
     ## Add in meridian and parallels
@@ -169,32 +176,20 @@ def draw_basemap(ax, datacrs=ccrs.PlateCarree(), extent=None, xticks=None, ytick
         gl.xlabel_style = kw_ticklabels
         gl.ylabel_style = kw_ticklabels
     
-    ## Gridlines
-    # Draw gridlines if requested
-    if (grid == True):
+    
+    # Gridlines
+    if grid:
         gl.xlines = True
         gl.ylines = True
-    if (grid == False):
+    else:
         gl.xlines = False
         gl.ylines = False
-            
-
-    # apply tick parameters
+    
+    # Add tick marks (no labels)
     ax.set_xticks(xticks, crs=datacrs)
     ax.set_yticks(yticks, crs=datacrs)
-    plt.yticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
-    plt.xticks(color='w', size=1) # hack: make the ytick labels white so the ticks show up but not the labels
-    ax.ticklabel_format(axis='both', style='plain')
+    ax.tick_params(labelbottom=False, labelleft=False, length=3, width=0.3, color='k')
 
-    ## Map Extent
-    # If no extent is given, use global extent
-    if extent is None:        
-        ax.set_global()
-        extent = [-180., 180., -90., 90.]
-    # If extent is given, set map extent to lat/lon bounding box
-    else:
-        ax.set_extent(extent, crs=datacrs)
-    
     return ax
 
 def add_subregion_boxes(ax, subregion_xy, width, height, ecolor, datacrs):
